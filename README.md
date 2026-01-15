@@ -1,8 +1,5 @@
 # cosmic-connect-core
 
-[![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
-[![License](https://img.shields.io/badge/license-GPL--2.0%2B%20OR%20GPL--3.0%2B-blue.svg)](LICENSE)
-
 KDE Connect protocol implementation in Rust - shared library for COSMIC Connect Android and COSMIC Desktop.
 
 ## Overview
@@ -76,7 +73,7 @@ device.send(packet)
 
 ## Development Status
 
-🚧 **Phase 0: Rust Core Extraction** (Current)
+**Phase 0: Rust Core Extraction** (Current)
 
 This project is actively being developed as part of the COSMIC Connect hybrid architecture initiative. We're extracting the protocol implementation from the COSMIC Desktop applet into this shared library.
 
@@ -181,6 +178,19 @@ This library implements KDE Connect protocol version 7, ensuring compatibility w
 - GSConnect on GNOME
 - Other KDE Connect implementations
 
+## Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+- **[Architecture](docs/Architecture.md)** - System design and architecture
+- **[Protocol](docs/Protocol.md)** - KDE Connect protocol specification
+- **[Plugin Development](docs/Plugin-Development.md)** - Creating custom plugins
+- **[FFI Guide](docs/FFI-Guide.md)** - Cross-platform FFI development
+- **[Testing](docs/Testing.md)** - Testing strategies and tools
+- **[Contributing](docs/Contributing.md)** - How to contribute
+
+See [docs/README.md](docs/README.md) for the complete documentation index.
+
 ## Resources
 
 - [KDE Connect Protocol Documentation](https://invent.kde.org/network/kdeconnect-kde)
@@ -198,7 +208,7 @@ For issues and questions:
 
 ---
 
-**Status**: 🚧 Alpha - Active Development
+**Status**: Alpha - Active Development
 
 **Version**: 0.1.0-alpha
 

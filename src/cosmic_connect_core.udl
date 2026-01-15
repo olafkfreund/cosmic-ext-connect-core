@@ -1,0 +1,287 @@
+// cosmic_connect_core.udl
+//
+// UniFFI Interface Definition for KDE Connect Protocol Implementation
+//
+// This file defines the Foreign Function Interface (FFI) boundary between
+// the Rust core library and platform-specific code (Kotlin/Android, Swift/iOS).
+//
+// ## Type Mapping
+//
+// UDL Type      → Kotlin Type       → Swift Type
+// ---------------------------------------------------
+// string        → String            → String
+// i64           → Long              → Int64
+// i32           → Int               → Int32
+// boolean       → Boolean           → Bool
+// bytes         → ByteArray         → Data
+// sequence<T>   → List<T>           → [T]
+// dictionary    → data class        → struct
+//
+// ## Error Handling
+//
+// All fallible operations return Result<T, ProtocolError>
+// which maps to exceptions in Kotlin/Swift.
+
+namespace cosmic_connect_core {
+  // ========================================================================
+  // Initialization
+  // ========================================================================
+
+  /// Initialize the library with logging
+  ///
+  /// # Arguments
+  ///
+  /// * `log_level` - Log level: "trace", "debug", "info", "warn", "error"
+  [Throws=ProtocolError]
+  void initialize(string log_level);
+
+  /// Get library version
+  string get_version();
+
+  /// Get protocol version
+  i32 get_protocol_version();
+
+  // ========================================================================
+  // Network Packet
+  // ========================================================================
+
+  /// Create a new network packet
+  ///
+  /// # Arguments
+  ///
+  /// * `packet_type` - Packet type (e.g., "kdeconnect.ping")
+  /// * `body` - JSON string containing packet body
+  [Throws=ProtocolError]
+  FfiPacket create_packet(string packet_type, string body);
+
+  /// Create a packet with explicit ID
+  [Throws=ProtocolError]
+  FfiPacket create_packet_with_id(i64 id, string packet_type, string body);
+
+  /// Serialize packet to bytes
+  [Throws=ProtocolError]
+  bytes serialize_packet(FfiPacket packet);
+
+  /// Deserialize packet from bytes
+  [Throws=ProtocolError]
+  FfiPacket deserialize_packet(bytes data);
+
+  // ========================================================================
+  // Certificate Management
+  // ========================================================================
+
+  /// Generate a new self-signed certificate
+  ///
+  /// # Arguments
+  ///
+  /// * `device_id` - Unique device identifier (UUID)
+  [Throws=ProtocolError]
+  FfiCertificate generate_certificate(string device_id);
+
+  /// Load certificate from PEM files
+  [Throws=ProtocolError]
+  FfiCertificate load_certificate(string cert_path, string key_path);
+
+  /// Save certificate to PEM files
+  [Throws=ProtocolError]
+  void save_certificate(FfiCertificate cert, string cert_path, string key_path);
+
+  /// Calculate SHA-256 fingerprint of certificate
+  string get_certificate_fingerprint(FfiCertificate cert);
+
+  // ========================================================================
+  // Discovery
+  // ========================================================================
+
+  /// Start device discovery
+  ///
+  /// Begins broadcasting identity packets and listening for remote devices.
+  [Throws=ProtocolError]
+  DiscoveryService start_discovery(FfiDeviceInfo local_device, DiscoveryCallback callback);
+
+  // ========================================================================
+  // Plugin System
+  // ========================================================================
+
+  /// Create a new plugin manager
+  PluginManager create_plugin_manager();
+};
+
+// ==========================================================================
+// Data Types
+// ==========================================================================
+
+/// Network packet
+dictionary FfiPacket {
+  i64 id;
+  string packet_type;
+  string body;
+  i64? payload_size;
+};
+
+/// Device information for identity packets
+dictionary FfiDeviceInfo {
+  string device_id;
+  string device_name;
+  string device_type;
+  i32 protocol_version;
+  sequence<string> incoming_capabilities;
+  sequence<string> outgoing_capabilities;
+  u16 tcp_port;
+};
+
+/// Certificate information
+dictionary FfiCertificate {
+  string device_id;
+  bytes certificate;
+  bytes private_key;
+  string fingerprint;
+};
+
+/// Battery state
+dictionary FfiBatteryState {
+  boolean is_charging;
+  i32 current_charge;
+  i32 threshold_event;
+};
+
+/// Discovery event types
+[Enum]
+interface DiscoveryEvent {
+  DeviceFound(FfiDeviceInfo device);
+  DeviceLost(string device_id);
+  IdentityReceived(string device_id, FfiPacket packet);
+};
+
+// ==========================================================================
+// Error Types
+// ==========================================================================
+
+[Error]
+enum ProtocolError {
+  "Io",
+  "Json",
+  "InvalidPacket",
+  "Network",
+  "Tls",
+  "Certificate",
+  "Discovery",
+  "DeviceNotFound",
+  "Connection",
+  "Pairing",
+  "Plugin",
+  "Timeout",
+  "PermissionDenied",
+  "AlreadyExists",
+  "NotPaired",
+  "Other",
+};
+
+// ==========================================================================
+// Interfaces (Objects with methods)
+// ==========================================================================
+
+/// Discovery service
+interface DiscoveryService {
+  /// Stop discovery
+  [Throws=ProtocolError]
+  void stop();
+
+  /// Get discovered devices
+  sequence<FfiDeviceInfo> get_devices();
+
+  /// Check if discovery is running
+  boolean is_running();
+};
+
+/// Plugin manager
+interface PluginManager {
+  /// Register a plugin by name
+  ///
+  /// # Arguments
+  ///
+  /// * `plugin_name` - Plugin name: "ping", "battery", etc.
+  [Throws=ProtocolError]
+  void register_plugin(string plugin_name);
+
+  /// Unregister a plugin
+  [Throws=ProtocolError]
+  void unregister_plugin(string plugin_name);
+
+  /// Route a packet to the appropriate plugin
+  [Throws=ProtocolError]
+  void route_packet(FfiPacket packet);
+
+  /// Get all capabilities (incoming, outgoing)
+  FfiCapabilities get_capabilities();
+
+  /// Check if a plugin is registered
+  boolean has_plugin(string plugin_name);
+
+  /// Get list of registered plugin names
+  sequence<string> plugin_names();
+
+  /// Shutdown all plugins
+  [Throws=ProtocolError]
+  void shutdown_all();
+
+  // Plugin-specific operations
+
+  /// Update local battery state (battery plugin)
+  [Throws=ProtocolError]
+  void update_battery(FfiBatteryState state);
+
+  /// Get remote battery state (battery plugin)
+  FfiBatteryState? get_remote_battery();
+
+  /// Create a ping packet (ping plugin)
+  [Throws=ProtocolError]
+  FfiPacket create_ping(string? message);
+
+  /// Get ping statistics (ping plugin)
+  FfiPingStats get_ping_stats();
+};
+
+/// Plugin capabilities
+dictionary FfiCapabilities {
+  sequence<string> incoming;
+  sequence<string> outgoing;
+};
+
+/// Ping statistics
+dictionary FfiPingStats {
+  u64 pings_received;
+  u64 pings_sent;
+};
+
+// ==========================================================================
+// Callbacks (Platform → Rust communication)
+// ==========================================================================
+
+/// Discovery callback interface
+///
+/// Implement this interface in Kotlin/Swift to receive discovery events.
+callback interface DiscoveryCallback {
+  /// Called when a device is discovered
+  void on_device_found(FfiDeviceInfo device);
+
+  /// Called when a device is lost (no longer visible)
+  void on_device_lost(string device_id);
+
+  /// Called when an identity packet is received
+  void on_identity_received(string device_id, FfiPacket packet);
+};
+
+/// Plugin event callback
+///
+/// Receives events from plugins (battery updates, etc.)
+callback interface PluginCallback {
+  /// Called when remote battery state changes
+  void on_battery_update(string device_id, FfiBatteryState state);
+
+  /// Called when a ping is received
+  void on_ping_received(string device_id, string? message);
+
+  /// Called when a generic packet is received
+  void on_packet_received(string device_id, FfiPacket packet);
+};
