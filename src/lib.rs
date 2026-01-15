@@ -19,7 +19,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::protocol::Packet;
+//! use cosmic_connect_core::Packet;
 //! use serde_json::json;
 //!
 //! // Create a packet
@@ -32,6 +32,7 @@
 
 // Re-export commonly used types
 pub use error::{ProtocolError, Result};
+pub use protocol::Packet;
 
 // Public modules
 pub mod protocol;
