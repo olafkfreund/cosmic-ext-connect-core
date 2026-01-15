@@ -34,7 +34,7 @@
 pub use error::{ProtocolError, Result};
 pub use protocol::Packet;
 
-// Re-export discovery module for convenience
+// Re-export modules for convenience
 pub use network::discovery;
 
 // Public modules
