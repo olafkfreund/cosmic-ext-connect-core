@@ -9,8 +9,9 @@
 
 // Module exports
 pub mod certificate;   // ✅ Extracted (Issue #47)
-// pub mod tls;        // TODO: Extract TLS transport (Issue #47)
+pub mod tls;           // ✅ Extracted (Issue #47)
 // pub mod pairing;    // TODO: Extract from applet
 
 // Re-exports for convenience
 pub use certificate::CertificateInfo;
+pub use tls::{DeviceInfo, TlsConfig, TlsConnection, TlsServer, should_initiate_connection};
