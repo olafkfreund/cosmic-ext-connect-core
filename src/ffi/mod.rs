@@ -657,6 +657,75 @@ pub fn create_send_sms_request(phone_number: String, message_body: String) -> Re
 }
 
 // ==========================================================================
+// Battery Plugin FFI Functions
+// ==========================================================================
+
+/// Create a battery status packet
+///
+/// Creates a packet containing current battery state information.
+/// This packet is sent bi-directionally between devices to share battery status.
+///
+/// # Arguments
+/// * `is_charging` - Whether the device is currently charging
+/// * `current_charge` - Battery percentage (0-100, will be clamped)
+/// * `threshold_event` - Threshold event indicator (0=none, 1=battery low)
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_battery_packet;
+///
+/// // Device is charging at 85%
+/// let packet = create_battery_packet(true, 85, 0)?;
+/// // Send packet to remote device...
+///
+/// // Device not charging, low battery (12%)
+/// let low_battery = create_battery_packet(false, 12, 1)?;
+/// // Send packet to remote device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_battery_packet(
+    is_charging: bool,
+    current_charge: i32,
+    threshold_event: i32,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    // Clamp current_charge to valid range (0-100)
+    let clamped_charge = current_charge.clamp(0, 100);
+
+    let body = json!({
+        "isCharging": is_charging,
+        "currentCharge": clamped_charge,
+        "thresholdEvent": threshold_event,
+    });
+
+    let packet = Packet::new("kdeconnect.battery".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a battery status request packet
+///
+/// Creates a packet requesting the remote device's current battery status.
+/// When received, the remote device should respond with a battery status packet.
+/// Sent from desktop to Android to get current battery information.
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_battery_request;
+///
+/// let packet = create_battery_request()?;
+/// // Send packet to Android device...
+/// // Android will respond with battery status
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_battery_request() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new("kdeconnect.battery.request".to_string(), json!({}));
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Functions
 // ==========================================================================
 

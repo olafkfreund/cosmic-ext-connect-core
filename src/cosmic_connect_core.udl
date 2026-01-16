@@ -276,6 +276,32 @@ namespace cosmic_connect_core {
     string message_body
   );
 
+  // ========================================================================
+  // Battery Plugin
+  // ========================================================================
+
+  /// Create a battery status packet
+  ///
+  /// Creates a packet containing current battery state.
+  ///
+  /// # Arguments
+  ///
+  /// * `is_charging` - Whether device is charging
+  /// * `current_charge` - Battery percentage (0-100)
+  /// * `threshold_event` - Threshold event (0=none, 1=low)
+  [Throws=ProtocolError]
+  FfiPacket create_battery_packet(
+    boolean is_charging,
+    i32 current_charge,
+    i32 threshold_event
+  );
+
+  /// Create a battery status request packet
+  ///
+  /// Creates a packet requesting battery status from remote device.
+  [Throws=ProtocolError]
+  FfiPacket create_battery_request();
+
   /// Start a payload download
   ///
   /// Downloads a file payload from a remote device via TCP connection.

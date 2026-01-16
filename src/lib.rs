@@ -53,6 +53,7 @@ pub use ffi::{
     create_telephony_event, create_mute_request, create_sms_messages,
     create_conversations_request, create_conversation_request,
     create_attachment_request, create_send_sms_request,
+    create_battery_packet, create_battery_request,
 };
 
 // Public modules
