@@ -42,14 +42,15 @@
 //! - [KDE Connect SMS Plugin](https://lxr.kde.org/source/network/kdeconnect-kde/plugins/sms/)
 //! - [Valent Protocol Documentation](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, ProtocolError, Result};
+use crate::error::{ProtocolError, Result};
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::any::Any;
 use tracing::{debug, info, warn};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Packet type for telephony events
 pub const PACKET_TYPE_TELEPHONY: &str = "kdeconnect.telephony";
@@ -400,9 +401,6 @@ impl Plugin for TelephonyPlugin {
         "telephony"
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
@@ -421,9 +419,8 @@ impl Plugin for TelephonyPlugin {
         ]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
-        self.device_id = Some(device.id().to_string());
-        info!("Telephony plugin initialized for device {}", device.name());
+    async fn initialize(&mut self) -> Result<()> {
+        info!("Telephony plugin initialized");
         Ok(())
     }
 
@@ -432,12 +429,12 @@ impl Plugin for TelephonyPlugin {
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         info!("Telephony plugin stopped");
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             PACKET_TYPE_TELEPHONY => {
                 debug!("Received telephony event");
@@ -455,46 +452,9 @@ impl Plugin for TelephonyPlugin {
     }
 }
 
-/// Factory for creating Telephony plugin instances
-#[derive(Debug, Clone, Copy)]
-pub struct TelephonyPluginFactory;
-
-impl PluginFactory for TelephonyPluginFactory {
-    fn name(&self) -> &str {
-        "telephony"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            PACKET_TYPE_TELEPHONY.to_string(),
-            PACKET_TYPE_SMS_MESSAGES.to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            PACKET_TYPE_TELEPHONY_MUTE.to_string(),
-            PACKET_TYPE_SMS_REQUEST_CONVERSATIONS.to_string(),
-            PACKET_TYPE_SMS_REQUEST_CONVERSATION.to_string(),
-            PACKET_TYPE_SMS_REQUEST_ATTACHMENT.to_string(),
-            PACKET_TYPE_SMS_REQUEST.to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(TelephonyPlugin::new())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeviceInfo, DeviceType};
-
-    fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
-        Device::from_discovery(info)
-    }
 
     #[tokio::test]
     async fn test_plugin_creation() {
@@ -506,10 +466,9 @@ mod tests {
     #[tokio::test]
     async fn test_plugin_initialization() {
         let mut plugin = TelephonyPlugin::new();
-        let device = create_test_device();
 
-        assert!(plugin.init(&device).await.is_ok());
-        assert_eq!(plugin.device_id, Some(device.id().to_string()));
+        assert!(plugin.initialize().await.is_ok());
+        assert!(plugin.device_id.is_none());
     }
 
     #[test]
@@ -574,30 +533,12 @@ mod tests {
         assert!(plugin.handle_telephony_event(&packet).await.is_ok());
     }
 
-    #[test]
-    fn test_factory() {
-        let factory = TelephonyPluginFactory;
-        assert_eq!(factory.name(), "telephony");
-
-        let incoming = factory.incoming_capabilities();
-        assert!(incoming.contains(&PACKET_TYPE_TELEPHONY.to_string()));
-        assert!(incoming.contains(&PACKET_TYPE_SMS_MESSAGES.to_string()));
-
-        let outgoing = factory.outgoing_capabilities();
-        assert!(outgoing.contains(&PACKET_TYPE_TELEPHONY_MUTE.to_string()));
-        assert!(outgoing.contains(&PACKET_TYPE_SMS_REQUEST.to_string()));
-
-        let plugin = factory.create();
-        assert_eq!(plugin.name(), "telephony");
-    }
-
     #[tokio::test]
     async fn test_plugin_lifecycle() {
         let mut plugin = TelephonyPlugin::new();
-        let device = create_test_device();
 
-        assert!(plugin.init(&device).await.is_ok());
+        assert!(plugin.initialize().await.is_ok());
         assert!(plugin.start().await.is_ok());
-        assert!(plugin.stop().await.is_ok());
+        assert!(plugin.shutdown().await.is_ok());
     }
 }
