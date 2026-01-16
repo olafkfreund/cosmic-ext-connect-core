@@ -191,6 +191,17 @@ namespace cosmic_connect_core {
   );
 
   // ========================================================================
+  // FindMyPhone Plugin
+  // ========================================================================
+
+  /// Create a find my phone request packet
+  ///
+  /// Creates a packet to make a remote device ring at maximum volume.
+  /// Packet has an empty body.
+  [Throws=ProtocolError]
+  FfiPacket create_findmyphone_request();
+
+  // ========================================================================
   // Telephony Plugin
   // ========================================================================
 

@@ -412,6 +412,33 @@ pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Resul
 }
 
 // ==========================================================================
+// FindMyPhone Plugin FFI Functions
+// ==========================================================================
+
+/// Create a find my phone request packet
+///
+/// Creates a packet to make a remote device (usually a phone) ring
+/// at maximum volume to help locate it. The packet has an empty body.
+///
+/// Sending this packet makes the phone ring. Sending it again should
+/// cancel the ringing (implementation dependent on receiving side).
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_findmyphone_request;
+///
+/// let packet = create_findmyphone_request()?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_findmyphone_request() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new("kdeconnect.findmyphone.request".to_string(), json!({}));
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Telephony Plugin FFI Functions
 // ==========================================================================
 
