@@ -412,6 +412,251 @@ pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Resul
 }
 
 // ==========================================================================
+// Telephony Plugin FFI Functions
+// ==========================================================================
+
+/// Create a telephony event packet (call notification)
+///
+/// Creates a packet for notifying about phone call events (ringing, talking, missed call).
+/// This packet is sent from Android to desktop when call state changes.
+///
+/// # Arguments
+/// * `event` - Event type: "ringing", "talking", "missedCall", or "sms" (deprecated)
+/// * `phone_number` - Caller's phone number (optional)
+/// * `contact_name` - Contact name from address book (optional)
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_telephony_event;
+///
+/// let packet = create_telephony_event(
+///     "ringing".to_string(),
+///     Some("+1234567890".to_string()),
+///     Some("John Doe".to_string())
+/// )?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_telephony_event(
+    event: String,
+    phone_number: Option<String>,
+    contact_name: Option<String>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let mut body = json!({
+        "event": event,
+    });
+
+    if let Some(number) = phone_number {
+        body["phoneNumber"] = json!(number);
+    }
+
+    if let Some(name) = contact_name {
+        body["contactName"] = json!(name);
+    }
+
+    let packet = Packet::new("kdeconnect.telephony".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a mute ringer request packet
+///
+/// Creates a packet requesting the phone to mute its ringer.
+/// Sent from desktop to Android when user wants to silence an incoming call.
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_mute_request;
+///
+/// let packet = create_mute_request()?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_mute_request() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new("kdeconnect.telephony.request_mute".to_string(), json!({}));
+    Ok(packet.into())
+}
+
+/// Create an SMS messages packet
+///
+/// Creates a packet containing SMS conversations with messages.
+/// Sent from Android to desktop in response to conversation requests.
+///
+/// # Arguments
+/// * `conversations_json` - JSON string containing array of conversations with messages
+///
+/// # JSON Format
+/// ```json
+/// {
+///   "conversations": [
+///     {
+///       "thread_id": 123,
+///       "messages": [
+///         {
+///           "_id": 456,
+///           "thread_id": 123,
+///           "address": "+1234567890",
+///           "body": "Hello!",
+///           "date": 1705507200000,
+///           "type": 1,
+///           "read": 1
+///         }
+///       ]
+///     }
+///   ]
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_sms_messages;
+///
+/// let conversations_json = r#"{"conversations":[{"thread_id":123,"messages":[]}]}"#;
+/// let packet = create_sms_messages(conversations_json.to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_sms_messages(conversations_json: String) -> Result<FfiPacket> {
+    use serde_json::Value;
+
+    // Parse JSON to validate format
+    let body: Value = serde_json::from_str(&conversations_json)
+        .map_err(|e| ProtocolError::InvalidPacket(format!("Invalid SMS JSON: {}", e)))?;
+
+    let packet = Packet::new("kdeconnect.sms.messages".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a request for SMS conversations list
+///
+/// Creates a packet requesting the list of SMS conversations (latest message in each thread).
+/// Sent from desktop to Android to get overview of SMS threads.
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_conversations_request;
+///
+/// let packet = create_conversations_request()?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_conversations_request() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new(
+        "kdeconnect.sms.request_conversations".to_string(),
+        json!({}),
+    );
+    Ok(packet.into())
+}
+
+/// Create a request for messages in a specific conversation
+///
+/// Creates a packet requesting messages from a specific SMS thread.
+/// Sent from desktop to Android to view conversation history.
+///
+/// # Arguments
+/// * `thread_id` - The conversation thread ID
+/// * `start_timestamp` - Optional earliest message timestamp (ms since epoch, for pagination)
+/// * `count` - Optional maximum number of messages to return
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_conversation_request;
+///
+/// // Request latest 50 messages from thread 123
+/// let packet = create_conversation_request(123, None, Some(50))?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_conversation_request(
+    thread_id: i64,
+    start_timestamp: Option<i64>,
+    count: Option<i32>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let mut body = json!({
+        "threadID": thread_id,
+    });
+
+    if let Some(ts) = start_timestamp {
+        body["rangeStartTimestamp"] = json!(ts);
+    }
+
+    if let Some(n) = count {
+        body["numberToRequest"] = json!(n);
+    }
+
+    let packet = Packet::new("kdeconnect.sms.request_conversation".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a request for a message attachment
+///
+/// Creates a packet requesting a message attachment (MMS image, video, etc.).
+/// Sent from desktop to Android to download attachment.
+///
+/// # Arguments
+/// * `part_id` - The attachment part ID from the message
+/// * `unique_identifier` - Unique file identifier for the attachment
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_attachment_request;
+///
+/// let packet = create_attachment_request(789, "abc123".to_string())?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_attachment_request(part_id: i64, unique_identifier: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "part_id": part_id,
+        "unique_identifier": unique_identifier,
+    });
+
+    let packet = Packet::new("kdeconnect.sms.request_attachment".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a request to send an SMS message
+///
+/// Creates a packet requesting to send an SMS from the Android device.
+/// Sent from desktop to Android when user composes a message.
+///
+/// # Arguments
+/// * `phone_number` - Recipient phone number
+/// * `message_body` - Message text to send
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_send_sms_request;
+///
+/// let packet = create_send_sms_request(
+///     "+1234567890".to_string(),
+///     "Hello from desktop!".to_string()
+/// )?;
+/// // Send packet to Android device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_send_sms_request(phone_number: String, message_body: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "phoneNumber": phone_number,
+        "messageBody": message_body,
+    });
+
+    let packet = Packet::new("kdeconnect.sms.request".to_string(), body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Functions
 // ==========================================================================
 

@@ -190,6 +190,92 @@ namespace cosmic_connect_core {
     i64 timestamp
   );
 
+  // ========================================================================
+  // Telephony Plugin
+  // ========================================================================
+
+  /// Create a telephony event packet (call notification)
+  ///
+  /// Creates a packet for notifying about phone call events.
+  ///
+  /// # Arguments
+  ///
+  /// * `event` - Event type: "ringing", "talking", "missedCall", or "sms"
+  /// * `phone_number` - Caller's phone number (optional)
+  /// * `contact_name` - Contact name from address book (optional)
+  [Throws=ProtocolError]
+  FfiPacket create_telephony_event(
+    string event,
+    string? phone_number,
+    string? contact_name
+  );
+
+  /// Create a mute ringer request packet
+  ///
+  /// Creates a packet requesting the phone to mute its ringer.
+  [Throws=ProtocolError]
+  FfiPacket create_mute_request();
+
+  /// Create an SMS messages packet
+  ///
+  /// Creates a packet containing SMS conversations with messages.
+  ///
+  /// # Arguments
+  ///
+  /// * `conversations_json` - JSON string with conversations array
+  [Throws=ProtocolError]
+  FfiPacket create_sms_messages(string conversations_json);
+
+  /// Create a request for SMS conversations list
+  ///
+  /// Creates a packet requesting the list of SMS conversations.
+  [Throws=ProtocolError]
+  FfiPacket create_conversations_request();
+
+  /// Create a request for messages in a specific conversation
+  ///
+  /// Creates a packet requesting messages from a specific SMS thread.
+  ///
+  /// # Arguments
+  ///
+  /// * `thread_id` - The conversation thread ID
+  /// * `start_timestamp` - Optional earliest message timestamp (ms since epoch)
+  /// * `count` - Optional maximum number of messages to return
+  [Throws=ProtocolError]
+  FfiPacket create_conversation_request(
+    i64 thread_id,
+    i64? start_timestamp,
+    i32? count
+  );
+
+  /// Create a request for a message attachment
+  ///
+  /// Creates a packet requesting a message attachment (MMS media).
+  ///
+  /// # Arguments
+  ///
+  /// * `part_id` - The attachment part ID from the message
+  /// * `unique_identifier` - Unique file identifier for the attachment
+  [Throws=ProtocolError]
+  FfiPacket create_attachment_request(
+    i64 part_id,
+    string unique_identifier
+  );
+
+  /// Create a request to send an SMS message
+  ///
+  /// Creates a packet requesting to send an SMS from the Android device.
+  ///
+  /// # Arguments
+  ///
+  /// * `phone_number` - Recipient phone number
+  /// * `message_body` - Message text to send
+  [Throws=ProtocolError]
+  FfiPacket create_send_sms_request(
+    string phone_number,
+    string message_body
+  );
+
   /// Start a payload download
   ///
   /// Downloads a file payload from a remote device via TCP connection.
