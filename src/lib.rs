@@ -49,6 +49,7 @@ pub use ffi::{
     start_discovery, create_plugin_manager,
     create_file_share_packet, create_text_share_packet, create_url_share_packet,
     create_multifile_update_packet, start_payload_download,
+    create_clipboard_packet, create_clipboard_connect_packet,
 };
 
 // Public modules

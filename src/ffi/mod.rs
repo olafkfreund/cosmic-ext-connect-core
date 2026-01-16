@@ -349,6 +349,69 @@ pub fn create_multifile_update_packet(
 }
 
 // ==========================================================================
+// Clipboard Plugin Functions
+// ==========================================================================
+
+/// Create a standard clipboard update packet
+///
+/// Creates a packet for syncing clipboard changes between devices.
+/// This packet does not include a timestamp and represents a standard clipboard update.
+///
+/// # Arguments
+/// * `content` - Text content to sync to clipboard
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_clipboard_packet;
+///
+/// let packet = create_clipboard_packet("Hello World".to_string())?;
+/// // Send packet to peer device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_clipboard_packet(content: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "content": content,
+    });
+
+    let packet = Packet::new("kdeconnect.clipboard".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a clipboard connect packet with timestamp
+///
+/// Creates a packet for syncing clipboard state when devices connect.
+/// Includes timestamp for sync loop prevention.
+///
+/// # Arguments
+/// * `content` - Text content to sync to clipboard
+/// * `timestamp` - UNIX epoch timestamp in milliseconds when content was last modified
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_clipboard_connect_packet;
+/// use chrono::Utc;
+///
+/// let content = "Hello World".to_string();
+/// let timestamp = Utc::now().timestamp_millis();
+/// let packet = create_clipboard_connect_packet(content, timestamp)?;
+/// // Send packet to newly connected peer device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "content": content,
+        "timestamp": timestamp,
+    });
+
+    let packet = Packet::new("kdeconnect.clipboard.connect".to_string(), body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Functions
 // ==========================================================================
 

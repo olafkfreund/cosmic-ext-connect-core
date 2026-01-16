@@ -164,6 +164,32 @@ namespace cosmic_connect_core {
     i64 total_payload_size
   );
 
+  /// Create a standard clipboard update packet
+  ///
+  /// Creates a packet for syncing clipboard changes between devices.
+  /// This packet does not include a timestamp and represents a standard clipboard update.
+  ///
+  /// # Arguments
+  ///
+  /// * `content` - Text content to sync to clipboard
+  [Throws=ProtocolError]
+  FfiPacket create_clipboard_packet(string content);
+
+  /// Create a clipboard connect packet with timestamp
+  ///
+  /// Creates a packet for syncing clipboard state when devices connect.
+  /// Includes timestamp for sync loop prevention.
+  ///
+  /// # Arguments
+  ///
+  /// * `content` - Text content to sync to clipboard
+  /// * `timestamp` - UNIX epoch timestamp in milliseconds when content was last modified
+  [Throws=ProtocolError]
+  FfiPacket create_clipboard_connect_packet(
+    string content,
+    i64 timestamp
+  );
+
   /// Start a payload download
   ///
   /// Downloads a file payload from a remote device via TCP connection.
