@@ -431,6 +431,27 @@ namespace cosmic_connect_core {
     i64 expected_size,
     PayloadCallback callback
   );
+
+  // ========================================================================
+  // Presenter Plugin
+  // ========================================================================
+
+  /// Create a presenter pointer movement packet
+  ///
+  /// Creates a packet to send pointer delta movements for a laser pointer effect.
+  ///
+  /// # Arguments
+  ///
+  /// * `dx` - Horizontal movement delta
+  /// * `dy` - Vertical movement delta
+  [Throws=ProtocolError]
+  FfiPacket create_presenter_pointer(f64 dx, f64 dy);
+
+  /// Create a presenter stop packet
+  ///
+  /// Creates a packet to stop presentation mode on the remote device.
+  [Throws=ProtocolError]
+  FfiPacket create_presenter_stop();
 };
 
 // ==========================================================================

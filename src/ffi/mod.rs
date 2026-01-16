@@ -1112,6 +1112,74 @@ pub fn load_certificate(cert_path: String, key_path: String) -> Result<FfiCertif
 }
 
 /// Save certificate to PEM files
+// ==========================================================================
+// Presenter Plugin
+// ==========================================================================
+
+/// Create a presenter pointer movement packet
+///
+/// This function creates a packet for sending pointer movement events for presentation
+/// control. The pointer movement can be used to simulate a laser pointer on the receiving
+/// device's screen.
+///
+/// # Arguments
+///
+/// * `dx` - Horizontal movement delta
+/// * `dy` - Vertical movement delta
+///
+/// # Returns
+///
+/// A packet containing the pointer movement data
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_presenter_pointer(10.5, -5.2)?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_presenter_pointer(dx: f64, dy: f64) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "dx": dx,
+        "dy": dy,
+    });
+
+    let packet = Packet::new("cconnect.presenter", body);
+    Ok(packet.into())
+}
+
+/// Create a presenter stop packet
+///
+/// This function creates a packet to stop presentation mode on the receiving device.
+///
+/// # Returns
+///
+/// A packet to stop presentation mode
+///
+/// # Example
+///
+/// ```ignore
+/// let packet = create_presenter_stop()?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_presenter_stop() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "stop": true
+    });
+
+    let packet = Packet::new("cconnect.presenter", body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
+// Certificate Management
+// ==========================================================================
+
 pub fn save_certificate(cert: FfiCertificate, cert_path: String, key_path: String) -> Result<()> {
     let cert_info: CertificateInfo = cert.into();
     cert_info.save_to_files(cert_path, key_path)

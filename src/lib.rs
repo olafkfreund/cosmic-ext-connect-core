@@ -60,6 +60,7 @@ pub use ffi::{
     create_notification_packet, create_cancel_notification_packet,
     create_notification_request_packet, create_dismiss_notification_packet,
     create_notification_action_packet, create_notification_reply_packet,
+    create_presenter_pointer, create_presenter_stop,
 };
 
 // Public modules
