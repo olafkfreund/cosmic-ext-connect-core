@@ -1448,6 +1448,64 @@ pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket>
 }
 
 // ==========================================================================
+// MPRIS Plugin
+// ==========================================================================
+
+/// Create MPRIS request packet
+///
+/// Creates a packet for controlling media playback on the remote device.
+/// Used to send control commands like play, pause, next, volume control, etc.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing player name and command in the format:
+///   ```json
+///   {
+///     "player": "spotify",
+///     "action": "PlayPause"
+///   }
+///   ```
+///   or with values:
+///   ```json
+///   {
+///     "player": "vlc",
+///     "setVolume": 75
+///   }
+///   ```
+///
+/// # Returns
+///
+/// An FfiPacket containing:
+/// - Type: `cosmicconnect.mpris.request`
+/// - Body: The parsed JSON data
+///
+/// # Errors
+///
+/// Returns `ProtocolError::Json` if the JSON string cannot be parsed.
+///
+/// # Example
+///
+/// ```no_run
+/// use cosmic_connect_core::create_mpris_request;
+/// use serde_json::json;
+///
+/// let request_data = json!({
+///     "player": "spotify",
+///     "action": "Next"
+/// });
+/// let packet = create_mpris_request(request_data.to_string())?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_mpris_request(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.mpris.request", body_data);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 

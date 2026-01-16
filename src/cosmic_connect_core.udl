@@ -532,6 +532,20 @@ namespace cosmic_connect_core {
   /// * `vcards_json` - JSON string containing UIDs and vCard data
   [Throws=ProtocolError]
   FfiPacket create_contacts_response_vcards(string vcards_json);
+
+  // ========================================================================
+  // MPRIS Plugin
+  // ========================================================================
+
+  /// Create an MPRIS request packet
+  ///
+  /// Creates a packet for controlling media playback on the remote device.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing player name and command
+  [Throws=ProtocolError]
+  FfiPacket create_mpris_request(string body_json);
 };
 
 // ==========================================================================
