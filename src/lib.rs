@@ -54,6 +54,9 @@ pub use ffi::{
     create_conversations_request, create_conversation_request,
     create_attachment_request, create_send_sms_request,
     create_battery_packet, create_battery_request,
+    create_notification_packet, create_cancel_notification_packet,
+    create_notification_request_packet, create_dismiss_notification_packet,
+    create_notification_action_packet, create_notification_reply_packet,
 };
 
 // Public modules

@@ -302,6 +302,76 @@ namespace cosmic_connect_core {
   [Throws=ProtocolError]
   FfiPacket create_battery_request();
 
+  // ========================================================================
+  // Notifications Plugin
+  // ========================================================================
+
+  /// Create a full notification packet
+  ///
+  /// Pass notification data as JSON string to avoid massive parameter list.
+  /// Required fields: id, appName, isClearable, time, silent
+  /// Optional fields: title, text, ticker, requestReplyId, actions, payloadHash
+  ///
+  /// # Arguments
+  ///
+  /// * `notification_json` - JSON string with notification data
+  [Throws=ProtocolError]
+  FfiPacket create_notification_packet(string notification_json);
+
+  /// Create a cancel notification packet
+  ///
+  /// Creates a packet to inform desktop that a notification was dismissed.
+  ///
+  /// # Arguments
+  ///
+  /// * `notification_id` - ID of the notification to cancel
+  [Throws=ProtocolError]
+  FfiPacket create_cancel_notification_packet(string notification_id);
+
+  /// Create a notification request packet
+  ///
+  /// Creates a packet requesting all current notifications from remote device.
+  [Throws=ProtocolError]
+  FfiPacket create_notification_request_packet();
+
+  /// Create a dismiss notification packet
+  ///
+  /// Creates a packet requesting the remote device to dismiss a notification.
+  ///
+  /// # Arguments
+  ///
+  /// * `notification_id` - ID of the notification to dismiss
+  [Throws=ProtocolError]
+  FfiPacket create_dismiss_notification_packet(string notification_id);
+
+  /// Create a notification action packet
+  ///
+  /// Creates a packet to trigger an action button on a remote notification.
+  ///
+  /// # Arguments
+  ///
+  /// * `notification_key` - ID of the notification
+  /// * `action_name` - Name of the action button to trigger
+  [Throws=ProtocolError]
+  FfiPacket create_notification_action_packet(
+    string notification_key,
+    string action_name
+  );
+
+  /// Create a notification reply packet
+  ///
+  /// Creates a packet to send an inline reply to a notification.
+  ///
+  /// # Arguments
+  ///
+  /// * `reply_id` - UUID from the notification's requestReplyId field
+  /// * `message` - Reply message text
+  [Throws=ProtocolError]
+  FfiPacket create_notification_reply_packet(
+    string reply_id,
+    string message
+  );
+
   /// Start a payload download
   ///
   /// Downloads a file payload from a remote device via TCP connection.

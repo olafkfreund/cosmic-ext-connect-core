@@ -726,6 +726,233 @@ pub fn create_battery_request() -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// Notifications Plugin Functions
+// ==========================================================================
+
+/// Create a full notification packet.
+///
+/// Creates a `kdeconnect.notification` packet for sending notification data
+/// from Android to desktop. The notification data is passed as a JSON string
+/// to avoid a massive parameter list (12+ fields).
+///
+/// # Arguments
+///
+/// * `notification_json` - JSON string containing notification fields:
+///   - `id` (string, required) - Unique notification identifier
+///   - `appName` (string, required) - Source application name
+///   - `title` (string, optional) - Notification title
+///   - `text` (string, optional) - Notification body text
+///   - `ticker` (string, optional) - Combined title and text
+///   - `isClearable` (boolean, required) - Whether user can dismiss
+///   - `time` (string, required) - UNIX epoch timestamp in milliseconds
+///   - `silent` (string, required) - "true" for preexisting, "false" for new
+///   - `requestReplyId` (string, optional) - UUID for inline reply support
+///   - `actions` (array, optional) - Available action button names
+///   - `payloadHash` (string, optional) - MD5 hash of icon payload
+///
+/// # Errors
+///
+/// Returns `ProtocolError::Json` if the JSON string is invalid or missing required fields.
+///
+/// # Example JSON
+/// ```json
+/// {
+///   "id": "notification-123",
+///   "appName": "Messages",
+///   "title": "New Message",
+///   "text": "Hello from your phone!",
+///   "isClearable": true,
+///   "time": "1704067200000",
+///   "silent": "false"
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_notification_packet;
+/// use serde_json::json;
+///
+/// let notification_json = json!({
+///     "id": "notif-123",
+///     "appName": "Messages",
+///     "title": "New Message",
+///     "text": "Hello!",
+///     "isClearable": true,
+///     "time": "1704067200000",
+///     "silent": "false"
+/// }).to_string();
+///
+/// let packet = create_notification_packet(notification_json)?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_notification_packet(notification_json: String) -> Result<FfiPacket> {
+    use crate::plugins::notification::{Notification, NotificationPlugin};
+
+    // Parse JSON string into Notification struct
+    let notification: Notification = serde_json::from_str(&notification_json)?;
+
+    // Create packet using plugin method
+    let plugin = NotificationPlugin::new();
+    let packet = plugin.create_notification_packet(&notification);
+
+    Ok(packet.into())
+}
+
+/// Create a cancel notification packet.
+///
+/// Creates a `kdeconnect.notification` packet with `isCancel: true` to
+/// inform the desktop that a notification has been dismissed on Android.
+///
+/// # Arguments
+///
+/// * `notification_id` - ID of the notification to cancel
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_cancel_notification_packet;
+///
+/// let packet = create_cancel_notification_packet("notif-123".to_string())?;
+/// // Send packet to desktop...
+/// // Desktop will remove the notification from its list
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_cancel_notification_packet(notification_id: String) -> Result<FfiPacket> {
+    use crate::plugins::notification::NotificationPlugin;
+
+    let plugin = NotificationPlugin::new();
+    let packet = plugin.create_cancel_packet(&notification_id);
+
+    Ok(packet.into())
+}
+
+/// Create a notification request packet.
+///
+/// Creates a `kdeconnect.notification.request` packet with `request: true`
+/// to ask the remote device to send all its current notifications.
+///
+/// This is typically sent when devices connect to sync existing notifications.
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_notification_request_packet;
+///
+/// let packet = create_notification_request_packet()?;
+/// // Send packet to Android...
+/// // Android will respond with all current notifications
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_notification_request_packet() -> Result<FfiPacket> {
+    use crate::plugins::notification::NotificationPlugin;
+
+    let plugin = NotificationPlugin::new();
+    let packet = plugin.create_request_packet();
+
+    Ok(packet.into())
+}
+
+/// Create a dismiss notification packet.
+///
+/// Creates a `kdeconnect.notification.request` packet with a `cancel` field
+/// to request the remote device to dismiss a specific notification.
+///
+/// # Arguments
+///
+/// * `notification_id` - ID of the notification to dismiss
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_dismiss_notification_packet;
+///
+/// let packet = create_dismiss_notification_packet("notif-123".to_string())?;
+/// // Send packet to Android...
+/// // Android will dismiss the notification
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_dismiss_notification_packet(notification_id: String) -> Result<FfiPacket> {
+    use crate::plugins::notification::NotificationPlugin;
+
+    let plugin = NotificationPlugin::new();
+    let packet = plugin.create_dismiss_packet(&notification_id);
+
+    Ok(packet.into())
+}
+
+/// Create a notification action packet.
+///
+/// Creates a `kdeconnect.notification.action` packet to trigger an
+/// action button on a remote notification.
+///
+/// # Arguments
+///
+/// * `notification_key` - ID of the notification
+/// * `action_name` - Name of the action button to trigger
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_notification_action_packet;
+///
+/// let packet = create_notification_action_packet(
+///     "notif-123".to_string(),
+///     "Reply".to_string()
+/// )?;
+/// // Send packet to Android...
+/// // Android will trigger the "Reply" action
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_notification_action_packet(
+    notification_key: String,
+    action_name: String,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "key": notification_key,
+        "action": action_name,
+    });
+
+    let packet = Packet::new("kdeconnect.notification.action".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create a notification reply packet.
+///
+/// Creates a `kdeconnect.notification.reply` packet to send an inline
+/// reply to a notification that supports replies (typically messaging apps).
+///
+/// # Arguments
+///
+/// * `reply_id` - UUID from the notification's `requestReplyId` field
+/// * `message` - Reply message text
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_notification_reply_packet;
+///
+/// let packet = create_notification_reply_packet(
+///     "uuid-reply-123".to_string(),
+///     "Thanks, I'll be there soon!".to_string()
+/// )?;
+/// // Send packet to Android...
+/// // Android will send the reply via RemoteInput
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_notification_reply_packet(
+    reply_id: String,
+    message: String,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "requestReplyId": reply_id,
+        "message": message,
+    });
+
+    let packet = Packet::new("kdeconnect.notification.reply".to_string(), body);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Functions
 // ==========================================================================
 
