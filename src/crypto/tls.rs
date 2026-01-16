@@ -547,7 +547,7 @@ impl TlsServer {
         // Parse identity packet
         let remote_identity = Packet::from_bytes(&identity_bytes)?;
 
-        if remote_identity.packet_type != "kdeconnect.identity" {
+        if remote_identity.packet_type != "cconnect.identity" {
             warn!(
                 "Received non-identity packet from {}: {}",
                 remote_addr, remote_identity.packet_type
@@ -574,7 +574,7 @@ impl TlsServer {
 
         // Use IP address as SNI name (KDE Connect doesn't use real domain names)
         let server_name = ServerName::try_from(remote_addr.ip().to_string())
-            .unwrap_or_else(|_| ServerName::try_from("kdeconnect.local").unwrap());
+            .unwrap_or_else(|_| ServerName::try_from("cconnect.local").unwrap());
 
         // Perform TLS handshake as CLIENT
         let mut tls_stream = timeout(TLS_TIMEOUT, connector.connect(server_name, tcp_stream))
@@ -611,7 +611,7 @@ impl TlsServer {
 
             // Send our encrypted identity packet
             let our_identity_packet = Packet::new(
-                "kdeconnect.identity",
+                "cconnect.identity",
                 serde_json::json!({
                     "deviceId": self.device_info.device_id,
                     "deviceName": self.device_info.device_name,
@@ -680,7 +680,7 @@ impl TlsServer {
             // Parse and validate encrypted identity
             let encrypted_identity = Packet::from_bytes(&encrypted_identity_bytes)?;
 
-            if encrypted_identity.packet_type != "kdeconnect.identity" {
+            if encrypted_identity.packet_type != "cconnect.identity" {
                 warn!(
                     "Received non-identity packet over TLS from {}: {}",
                     remote_addr, encrypted_identity.packet_type
@@ -771,7 +771,7 @@ mod tests {
             protocol_version: 8,
             incoming_capabilities: vec![],
             outgoing_capabilities: vec![],
-            tcp_port: 1716,
+            tcp_port: 1816,
         };
 
         let server_addr = "127.0.0.1:0".parse().unwrap();
@@ -791,9 +791,9 @@ mod tests {
             device_name: "Test Device 2".to_string(),
             device_type: "desktop".to_string(),
             protocol_version: 8,
-            incoming_capabilities: vec!["kdeconnect.ping".to_string()],
-            outgoing_capabilities: vec!["kdeconnect.ping".to_string()],
-            tcp_port: 1716,
+            incoming_capabilities: vec!["cconnect.ping".to_string()],
+            outgoing_capabilities: vec!["cconnect.ping".to_string()],
+            tcp_port: 1816,
         };
 
         // Start TLS server on device2
@@ -813,7 +813,7 @@ mod tests {
             let (mut conn, identity) = server.accept().await.unwrap();
 
             // Verify we received identity packet
-            assert_eq!(identity.packet_type, "kdeconnect.identity");
+            assert_eq!(identity.packet_type, "cconnect.identity");
             assert_eq!(
                 identity
                     .body
@@ -825,14 +825,14 @@ mod tests {
 
             // Receive test packet from client
             let packet = conn.receive_packet().await.unwrap();
-            assert_eq!(packet.packet_type, "kdeconnect.ping");
+            assert_eq!(packet.packet_type, "cconnect.ping");
             assert_eq!(
                 packet.body.get("message").and_then(|v| v.as_str()).unwrap(),
                 "hello"
             );
 
             // Send response
-            let response = Packet::new("kdeconnect.ping", json!({"message": "pong"}));
+            let response = Packet::new("cconnect.ping", json!({"message": "pong"}));
             conn.send_packet(&response).await.unwrap();
 
             conn.close().await.unwrap();
@@ -851,15 +851,15 @@ mod tests {
 
             // Send plain-text identity packet (protocol requirement)
             let identity_packet = Packet::new(
-                "kdeconnect.identity",
+                "cconnect.identity",
                 json!({
                     "deviceId": "device1",
                     "deviceName": "Test Device 1",
                     "deviceType": "desktop",
                     "protocolVersion": 8,
-                    "incomingCapabilities": ["kdeconnect.ping"],
-                    "outgoingCapabilities": ["kdeconnect.ping"],
-                    "tcpPort": 1716,
+                    "incomingCapabilities": ["cconnect.ping"],
+                    "outgoingCapabilities": ["cconnect.ping"],
+                    "tcpPort": 1816,
                 }),
             );
 
@@ -873,15 +873,15 @@ mod tests {
 
             // Protocol v8: Send identity over encrypted connection
             let encrypted_identity_packet = Packet::new(
-                "kdeconnect.identity",
+                "cconnect.identity",
                 json!({
                     "deviceId": "device1",
                     "deviceName": "Test Device 1",
                     "deviceType": "desktop",
                     "protocolVersion": 8,
-                    "incomingCapabilities": ["kdeconnect.ping"],
-                    "outgoingCapabilities": ["kdeconnect.ping"],
-                    "tcpPort": 1716,
+                    "incomingCapabilities": ["cconnect.ping"],
+                    "outgoingCapabilities": ["cconnect.ping"],
+                    "tcpPort": 1816,
                 }),
             );
 
@@ -901,7 +901,7 @@ mod tests {
             }
 
             let server_identity = Packet::from_bytes(&identity_bytes).unwrap();
-            assert_eq!(server_identity.packet_type, "kdeconnect.identity");
+            assert_eq!(server_identity.packet_type, "cconnect.identity");
             assert_eq!(
                 server_identity
                     .body
@@ -916,12 +916,12 @@ mod tests {
                 TlsConnection::from_stream(tokio_rustls::TlsStream::Server(tls_stream), connect_addr);
 
             // Send test packet
-            let test_packet = Packet::new("kdeconnect.ping", json!({"message": "hello"}));
+            let test_packet = Packet::new("cconnect.ping", json!({"message": "hello"}));
             conn.send_packet(&test_packet).await.unwrap();
 
             // Receive response
             let response = conn.receive_packet().await.unwrap();
-            assert_eq!(response.packet_type, "kdeconnect.ping");
+            assert_eq!(response.packet_type, "cconnect.ping");
             assert_eq!(
                 response.body.get("message").and_then(|v| v.as_str()).unwrap(),
                 "pong"

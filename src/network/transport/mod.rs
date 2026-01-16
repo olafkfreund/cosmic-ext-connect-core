@@ -28,7 +28,7 @@
 //!     println!("MTU: {} bytes", caps.max_packet_size);
 //!
 //!     // Send packet
-//!     // let packet = Packet::new("kdeconnect.ping", json!({}));
+//!     // let packet = Packet::new("cconnect.ping", json!({}));
 //!     // transport.send_packet(&packet).await?;
 //! }
 //! ```

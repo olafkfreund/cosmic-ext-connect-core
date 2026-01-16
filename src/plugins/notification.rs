@@ -6,10 +6,10 @@
 //! ## Protocol
 //!
 //! **Packet Types**:
-//! - `kdeconnect.notification` - Send or cancel notification
-//! - `kdeconnect.notification.request` - Request all notifications or dismiss one
-//! - `kdeconnect.notification.action` - Trigger notification action button
-//! - `kdeconnect.notification.reply` - Reply to notification (chat apps)
+//! - `cconnect.notification` - Send or cancel notification
+//! - `cconnect.notification.request` - Request all notifications or dismiss one
+//! - `cconnect.notification.action` - Trigger notification action button
+//! - `cconnect.notification.reply` - Reply to notification (chat apps)
 //!
 //! **Capabilities**:
 //! - Incoming: All four packet types
@@ -17,12 +17,12 @@
 //!
 //! ## Packet Formats
 //!
-//! ### Notification (`kdeconnect.notification`)
+//! ### Notification (`cconnect.notification`)
 //!
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.notification",
+//!     "type": "cconnect.notification",
 //!     "body": {
 //!         "id": "notification-id-123",
 //!         "appName": "Messages",
@@ -41,7 +41,7 @@
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.notification",
+//!     "type": "cconnect.notification",
 //!     "body": {
 //!         "id": "notification-id-123",
 //!         "isCancel": true
@@ -54,7 +54,7 @@
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.notification.request",
+//!     "type": "cconnect.notification.request",
 //!     "body": {
 //!         "request": true
 //!     }
@@ -66,7 +66,7 @@
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.notification.request",
+//!     "type": "cconnect.notification.request",
 //!     "body": {
 //!         "cancel": "notification-id-123"
 //!     }
@@ -399,11 +399,11 @@ impl NotificationPlugin {
     /// let notif = Notification::new("123", "App", "Title", "Text", true);
     /// let packet = plugin.create_notification_packet(&notif);
     ///
-    /// assert_eq!(packet.packet_type, "kdeconnect.notification");
+    /// assert_eq!(packet.packet_type, "cconnect.notification");
     /// ```
     pub fn create_notification_packet(&self, notification: &Notification) -> Packet {
         let body = serde_json::to_value(notification).unwrap_or(json!({}));
-        Packet::new("kdeconnect.notification", body)
+        Packet::new("cconnect.notification", body)
     }
 
     /// Create a cancel notification packet
@@ -416,14 +416,14 @@ impl NotificationPlugin {
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_cancel_packet("notif-123");
     ///
-    /// assert_eq!(packet.packet_type, "kdeconnect.notification");
+    /// assert_eq!(packet.packet_type, "cconnect.notification");
     /// ```
     pub fn create_cancel_packet(&self, notification_id: &str) -> Packet {
         let body = json!({
             "id": notification_id,
             "isCancel": true
         });
-        Packet::new("kdeconnect.notification", body)
+        Packet::new("cconnect.notification", body)
     }
 
     /// Create a request all notifications packet
@@ -436,11 +436,11 @@ impl NotificationPlugin {
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_request_packet();
     ///
-    /// assert_eq!(packet.packet_type, "kdeconnect.notification.request");
+    /// assert_eq!(packet.packet_type, "cconnect.notification.request");
     /// ```
     pub fn create_request_packet(&self) -> Packet {
         let body = json!({ "request": true });
-        Packet::new("kdeconnect.notification.request", body)
+        Packet::new("cconnect.notification.request", body)
     }
 
     /// Create a dismiss notification packet
@@ -453,11 +453,11 @@ impl NotificationPlugin {
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_dismiss_packet("notif-123");
     ///
-    /// assert_eq!(packet.packet_type, "kdeconnect.notification.request");
+    /// assert_eq!(packet.packet_type, "cconnect.notification.request");
     /// ```
     pub fn create_dismiss_packet(&self, notification_id: &str) -> Packet {
         let body = json!({ "cancel": notification_id });
-        Packet::new("kdeconnect.notification.request", body)
+        Packet::new("cconnect.notification.request", body)
     }
 
     /// Handle incoming notification
@@ -606,19 +606,19 @@ impl Plugin for NotificationPlugin {
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
-            "kdeconnect.notification".to_string(),
-            "kdeconnect.notification.request".to_string(),
-            "kdeconnect.notification.action".to_string(),
-            "kdeconnect.notification.reply".to_string(),
+            "cconnect.notification".to_string(),
+            "cconnect.notification.request".to_string(),
+            "cconnect.notification.action".to_string(),
+            "cconnect.notification.reply".to_string(),
         ]
     }
 
     fn outgoing_capabilities(&self) -> Vec<String> {
         vec![
-            "kdeconnect.notification".to_string(),
-            "kdeconnect.notification.request".to_string(),
-            "kdeconnect.notification.action".to_string(),
-            "kdeconnect.notification.reply".to_string(),
+            "cconnect.notification".to_string(),
+            "cconnect.notification.request".to_string(),
+            "cconnect.notification.action".to_string(),
+            "cconnect.notification.reply".to_string(),
         ]
     }
 
@@ -639,16 +639,16 @@ impl Plugin for NotificationPlugin {
 
     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
-            "kdeconnect.notification" => {
+            "cconnect.notification" => {
                 self.handle_notification(packet);
             }
-            "kdeconnect.notification.request" => {
+            "cconnect.notification.request" => {
                 self.handle_request(packet);
             }
-            "kdeconnect.notification.action" => {
+            "cconnect.notification.action" => {
                 self.handle_action(packet);
             }
-            "kdeconnect.notification.reply" => {
+            "cconnect.notification.reply" => {
                 self.handle_reply(packet);
             }
             _ => {
@@ -719,10 +719,10 @@ mod tests {
 
         let incoming = plugin.incoming_capabilities();
         assert_eq!(incoming.len(), 4);
-        assert!(incoming.contains(&"kdeconnect.notification".to_string()));
-        assert!(incoming.contains(&"kdeconnect.notification.request".to_string()));
-        assert!(incoming.contains(&"kdeconnect.notification.action".to_string()));
-        assert!(incoming.contains(&"kdeconnect.notification.reply".to_string()));
+        assert!(incoming.contains(&"cconnect.notification".to_string()));
+        assert!(incoming.contains(&"cconnect.notification.request".to_string()));
+        assert!(incoming.contains(&"cconnect.notification.action".to_string()));
+        assert!(incoming.contains(&"cconnect.notification.reply".to_string()));
 
         let outgoing = plugin.outgoing_capabilities();
         assert_eq!(outgoing.len(), 4);
@@ -746,7 +746,7 @@ mod tests {
         let notif = Notification::new("123", "Messages", "Title", "Text", true);
         let packet = plugin.create_notification_packet(&notif);
 
-        assert_eq!(packet.packet_type, "kdeconnect.notification");
+        assert_eq!(packet.packet_type, "cconnect.notification");
         assert_eq!(packet.body.get("id").and_then(|v| v.as_str()), Some("123"));
     }
 
@@ -755,7 +755,7 @@ mod tests {
         let plugin = NotificationPlugin::new();
         let packet = plugin.create_cancel_packet("notif-123");
 
-        assert_eq!(packet.packet_type, "kdeconnect.notification");
+        assert_eq!(packet.packet_type, "cconnect.notification");
         assert_eq!(
             packet.body.get("id").and_then(|v| v.as_str()),
             Some("notif-123")
@@ -771,7 +771,7 @@ mod tests {
         let plugin = NotificationPlugin::new();
         let packet = plugin.create_request_packet();
 
-        assert_eq!(packet.packet_type, "kdeconnect.notification.request");
+        assert_eq!(packet.packet_type, "cconnect.notification.request");
         assert_eq!(
             packet.body.get("request").and_then(|v| v.as_bool()),
             Some(true)
@@ -783,7 +783,7 @@ mod tests {
         let plugin = NotificationPlugin::new();
         let packet = plugin.create_dismiss_packet("notif-123");
 
-        assert_eq!(packet.packet_type, "kdeconnect.notification.request");
+        assert_eq!(packet.packet_type, "cconnect.notification.request");
         assert_eq!(
             packet.body.get("cancel").and_then(|v| v.as_str()),
             Some("notif-123")
@@ -852,7 +852,7 @@ mod tests {
         let mut plugin = NotificationPlugin::new();
         plugin.device_id = Some("test-device-id".to_string());
 
-        let packet = Packet::new("kdeconnect.ping", json!({}));
+        let packet = Packet::new("cconnect.ping", json!({}));
 
         plugin.handle_packet(&packet).await.unwrap();
 

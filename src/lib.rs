@@ -1,11 +1,11 @@
 //! cosmic-connect-core
 //!
-//! KDE Connect protocol implementation in Rust.
+//! COSMIC Connect protocol implementation in Rust.
 //! Shared library for COSMIC Connect Android and COSMIC Desktop.
 //!
 //! ## Architecture
 //!
-//! This library provides a complete implementation of the KDE Connect protocol v7,
+//! This library provides a complete implementation of the KDE Connect-compatible protocol v7,
 //! designed for cross-platform use via FFI (Foreign Function Interface).
 //!
 //! ### Modules
@@ -23,9 +23,9 @@
 //! use serde_json::json;
 //!
 //! // Create a packet
-//! let packet = Packet::new("kdeconnect.ping", json!({}));
+//! let packet = Packet::new("cconnect.ping", json!({}));
 //!
-//! // Serialize with newline terminator (KDE Connect protocol requirement)
+//! // Serialize with newline terminator (COSMIC Connect protocol requirement)
 //! let bytes = packet.to_bytes().unwrap();
 //! assert_eq!(bytes.last(), Some(&b'\n'));
 //! ```
@@ -77,7 +77,7 @@ uniffi::include_scaffolding!("cosmic_connect_core");
 
 // Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-/// Updated to version 8 to match latest KDE Connect Android app
+/// Protocol version 8 (KDE Connect compatible)
 pub const PROTOCOL_VERSION: i32 = 8;
 
 #[cfg(test)]

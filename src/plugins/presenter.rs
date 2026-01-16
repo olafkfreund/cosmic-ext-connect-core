@@ -7,10 +7,10 @@
 //! ## Protocol
 //!
 //! **Packet Types**:
-//! - `kdeconnect.presenter` - Pointer and click events (incoming)
+//! - `cconnect.presenter` - Pointer and click events (incoming)
 //!
 //! **Capabilities**:
-//! - Incoming: `kdeconnect.presenter` - Receive presentation control events
+//! - Incoming: `cconnect.presenter` - Receive presentation control events
 //!
 //! ## Supported Events
 //!
@@ -41,7 +41,7 @@ use tracing::{debug, info, warn};
 use crate::plugins::Plugin;
 
 /// Packet type for presenter events
-pub const PACKET_TYPE_PRESENTER: &str = "kdeconnect.presenter";
+pub const PACKET_TYPE_PRESENTER: &str = "cconnect.presenter";
 
 /// Presenter event
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -169,7 +169,7 @@ mod tests {
     use serde_json::json;
 
     fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
+        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1816);
         Device::from_discovery(info)
     }
 
@@ -197,7 +197,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.presenter",
+            "cconnect.presenter",
             json!({
                 "dx": 10.5,
                 "dy": -5.2
@@ -220,7 +220,7 @@ mod tests {
         plugin.presentation_active = true;
 
         let packet = Packet::new(
-            "kdeconnect.presenter",
+            "cconnect.presenter",
             json!({
                 "stop": true
             }),

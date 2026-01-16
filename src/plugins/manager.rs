@@ -28,7 +28,7 @@
 //! let (incoming, outgoing) = manager.get_capabilities();
 //!
 //! // Route incoming packet
-//! let packet = Packet::new("kdeconnect.ping", json!({}));
+//! let packet = Packet::new("cconnect.ping", json!({}));
 //! manager.route_packet(&packet).await?;
 //! # Ok(())
 //! # }
@@ -180,7 +180,7 @@ impl PluginManager {
     /// # Examples
     ///
     /// ```ignore
-    /// let packet = Packet::new("kdeconnect.ping", json!({}));
+    /// let packet = Packet::new("cconnect.ping", json!({}));
     /// manager.route_packet(&packet).await?;
     /// ```
     pub async fn route_packet(&self, packet: &Packet) -> Result<()> {
@@ -249,7 +249,7 @@ impl PluginManager {
     ///
     /// ```ignore
     /// let (incoming, outgoing) = manager.get_capabilities();
-    /// let identity = Packet::new("kdeconnect.identity", json!({
+    /// let identity = Packet::new("cconnect.identity", json!({
     ///     "incomingCapabilities": incoming,
     ///     "outgoingCapabilities": outgoing,
     /// }));
@@ -420,8 +420,8 @@ mod tests {
         let mut manager = PluginManager::new();
         let plugin = Box::new(TestPlugin::new(
             "test",
-            vec!["kdeconnect.test"],
-            vec!["kdeconnect.test.response"],
+            vec!["cconnect.test"],
+            vec!["cconnect.test.response"],
         ));
 
         manager.register_plugin(plugin).await.unwrap();
@@ -454,13 +454,13 @@ mod tests {
         manager
             .register_plugin(Box::new(TestPlugin::new(
                 "test",
-                vec!["kdeconnect.test"],
+                vec!["cconnect.test"],
                 vec![],
             )))
             .await
             .unwrap();
 
-        let packet = Packet::new("kdeconnect.test", json!({}));
+        let packet = Packet::new("cconnect.test", json!({}));
         manager.route_packet(&packet).await.unwrap();
 
         // Packet routing succeeded - plugin handled it
@@ -472,7 +472,7 @@ mod tests {
     async fn test_route_to_nonexistent_plugin() {
         let manager = PluginManager::new();
 
-        let packet = Packet::new("kdeconnect.nonexistent", json!({}));
+        let packet = Packet::new("cconnect.nonexistent", json!({}));
         let result = manager.route_packet(&packet).await;
 
         assert!(result.is_err());
@@ -486,8 +486,8 @@ mod tests {
         manager
             .register_plugin(Box::new(TestPlugin::new(
                 "plugin1",
-                vec!["kdeconnect.battery"],
-                vec!["kdeconnect.battery.request"],
+                vec!["cconnect.battery"],
+                vec!["cconnect.battery.request"],
             )))
             .await
             .unwrap();
@@ -495,8 +495,8 @@ mod tests {
         manager
             .register_plugin(Box::new(TestPlugin::new(
                 "plugin2",
-                vec!["kdeconnect.ping"],
-                vec!["kdeconnect.ping"],
+                vec!["cconnect.ping"],
+                vec!["cconnect.ping"],
             )))
             .await
             .unwrap();
@@ -504,12 +504,12 @@ mod tests {
         let (incoming, outgoing) = manager.get_capabilities().await;
 
         assert_eq!(incoming.len(), 2);
-        assert!(incoming.contains(&"kdeconnect.battery".to_string()));
-        assert!(incoming.contains(&"kdeconnect.ping".to_string()));
+        assert!(incoming.contains(&"cconnect.battery".to_string()));
+        assert!(incoming.contains(&"cconnect.ping".to_string()));
 
         assert_eq!(outgoing.len(), 2);
-        assert!(outgoing.contains(&"kdeconnect.battery.request".to_string()));
-        assert!(outgoing.contains(&"kdeconnect.ping".to_string()));
+        assert!(outgoing.contains(&"cconnect.battery.request".to_string()));
+        assert!(outgoing.contains(&"cconnect.ping".to_string()));
     }
 
     #[tokio::test]

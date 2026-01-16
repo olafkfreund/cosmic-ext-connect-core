@@ -80,8 +80,8 @@ mod tests {
 
     #[test]
     fn test_event_type_checking() {
-        let info = DeviceInfo::new("Test", DeviceType::Desktop, 1716);
-        let addr = "192.168.1.100:1716".parse().unwrap();
+        let info = DeviceInfo::new("Test", DeviceType::Desktop, 1816);
+        let addr = "192.168.1.100:1816".parse().unwrap();
 
         let discovered = DiscoveryEvent::DeviceDiscovered {
             info: info.clone(),
@@ -99,8 +99,8 @@ mod tests {
 
     #[test]
     fn test_device_id_extraction() {
-        let info = DeviceInfo::with_id("test_123", "Test", DeviceType::Desktop, 1716);
-        let addr = "192.168.1.100:1716".parse().unwrap();
+        let info = DeviceInfo::with_id("test_123", "Test", DeviceType::Desktop, 1816);
+        let addr = "192.168.1.100:1816".parse().unwrap();
 
         let discovered = DiscoveryEvent::DeviceDiscovered {
             info: info.clone(),
@@ -113,7 +113,7 @@ mod tests {
         };
         assert_eq!(timeout.device_id(), Some("timeout_id"));
 
-        let started = DiscoveryEvent::ServiceStarted { port: 1716 };
+        let started = DiscoveryEvent::ServiceStarted { port: 1816 };
         assert_eq!(started.device_id(), None);
     }
 }

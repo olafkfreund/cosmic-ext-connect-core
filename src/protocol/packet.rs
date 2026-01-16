@@ -7,7 +7,7 @@
 //!
 //! Each packet contains:
 //! - `id`: UNIX epoch timestamp in milliseconds
-//! - `type`: Packet type in format `kdeconnect.<plugin>[.<action>]`
+//! - `type`: Packet type in format `cconnect.<plugin>[.<action>]`
 //! - `body`: JSON dictionary of plugin-specific parameters
 //! - `payloadSize`: (optional) Size of payload data in bytes
 //! - `payloadTransferInfo`: (optional) Transfer negotiation parameters
@@ -32,7 +32,7 @@ use std::collections::HashMap;
 ///
 /// // Create identity packet
 /// let packet = Packet::new(
-///     "kdeconnect.identity",
+///     "cconnect.identity",
 ///     json!({
 ///         "deviceId": "my-device-id",
 ///         "deviceName": "My Computer",
@@ -46,7 +46,7 @@ use std::collections::HashMap;
 ///
 /// // Deserialize from bytes
 /// let parsed = Packet::from_bytes(&bytes).unwrap();
-/// assert_eq!(parsed.packet_type, "kdeconnect.identity");
+/// assert_eq!(parsed.packet_type, "cconnect.identity");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Packet {
@@ -55,9 +55,9 @@ pub struct Packet {
     #[serde(deserialize_with = "deserialize_id", serialize_with = "serialize_id")]
     pub id: i64,
 
-    /// Packet type in format: kdeconnect.<plugin>[.<action>]
+    /// Packet type in format: cconnect.<plugin>[.<action>]
     ///
-    /// Examples: "kdeconnect.battery", "kdeconnect.mpris.request"
+    /// Examples: "cconnect.battery", "cconnect.mpris.request"
     #[serde(rename = "type")]
     pub packet_type: String,
 
@@ -84,7 +84,7 @@ impl Packet {
     ///
     /// # Arguments
     ///
-    /// * `packet_type` - Packet type string (e.g., "kdeconnect.battery")
+    /// * `packet_type` - Packet type string (e.g., "cconnect.battery")
     /// * `body` - JSON value containing packet parameters
     ///
     /// # Examples
@@ -93,7 +93,7 @@ impl Packet {
     /// use cosmic_connect_core::protocol::Packet;
     /// use serde_json::json;
     ///
-    /// let packet = Packet::new("kdeconnect.ping", json!({}));
+    /// let packet = Packet::new("cconnect.ping", json!({}));
     /// ```
     pub fn new(packet_type: impl Into<String>, body: Value) -> Self {
         Self {
@@ -134,7 +134,7 @@ impl Packet {
     /// use cosmic_connect_core::protocol::Packet;
     /// use serde_json::json;
     ///
-    /// let packet = Packet::new("kdeconnect.ping", json!({}));
+    /// let packet = Packet::new("cconnect.ping", json!({}));
     /// let bytes = packet.to_bytes().unwrap();
     ///
     /// // Packet ends with newline
@@ -163,9 +163,9 @@ impl Packet {
     /// ```
     /// use cosmic_connect_core::protocol::Packet;
     ///
-    /// let json_data = r#"{"id":123456789,"type":"kdeconnect.ping","body":{}}"#;
+    /// let json_data = r#"{"id":123456789,"type":"cconnect.ping","body":{}}"#;
     /// let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();
-    /// assert_eq!(packet.packet_type, "kdeconnect.ping");
+    /// assert_eq!(packet.packet_type, "cconnect.ping");
     /// ```
     pub fn from_bytes(data: &[u8]) -> Result<Self> {
         // Strip trailing newline if present (handles both \n and \r\n)
@@ -254,8 +254,8 @@ mod tests {
 
     #[test]
     fn test_new_packet() {
-        let packet = Packet::new("kdeconnect.ping", json!({}));
-        assert_eq!(packet.packet_type, "kdeconnect.ping");
+        let packet = Packet::new("cconnect.ping", json!({}));
+        assert_eq!(packet.packet_type, "cconnect.ping");
         assert!(packet.body.is_object());
         assert!(packet.id > 0);
     }
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn test_packet_serialization() {
         let packet = Packet::new(
-            "kdeconnect.identity",
+            "cconnect.identity",
             json!({
                 "deviceId": "test-device",
                 "deviceName": "Test Device",
@@ -284,38 +284,38 @@ mod tests {
 
     #[test]
     fn test_packet_deserialization() {
-        let json_data = r#"{"id":1234567890,"type":"kdeconnect.ping","body":{}}"#;
+        let json_data = r#"{"id":1234567890,"type":"cconnect.ping","body":{}}"#;
         let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();
 
         assert_eq!(packet.id, 1234567890);
-        assert_eq!(packet.packet_type, "kdeconnect.ping");
+        assert_eq!(packet.packet_type, "cconnect.ping");
         assert!(packet.body.is_object());
     }
 
     #[test]
     fn test_packet_deserialization_with_newline() {
         let json_data =
-            r#"{"id":1234567890,"type":"kdeconnect.ping","body":{}}"#.to_string() + "\n";
+            r#"{"id":1234567890,"type":"cconnect.ping","body":{}}"#.to_string() + "\n";
         let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();
 
         assert_eq!(packet.id, 1234567890);
-        assert_eq!(packet.packet_type, "kdeconnect.ping");
+        assert_eq!(packet.packet_type, "cconnect.ping");
     }
 
     #[test]
     fn test_packet_deserialization_with_crlf() {
         let json_data =
-            r#"{"id":1234567890,"type":"kdeconnect.ping","body":{}}"#.to_string() + "\r\n";
+            r#"{"id":1234567890,"type":"cconnect.ping","body":{}}"#.to_string() + "\r\n";
         let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();
 
         assert_eq!(packet.id, 1234567890);
-        assert_eq!(packet.packet_type, "kdeconnect.ping");
+        assert_eq!(packet.packet_type, "cconnect.ping");
     }
 
     #[test]
     fn test_roundtrip() {
         let original = Packet::new(
-            "kdeconnect.battery",
+            "cconnect.battery",
             json!({
                 "isCharging": true,
                 "currentCharge": 85,
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn test_id_as_string() {
         // Some KDE Connect clients send id as string
-        let json_data = r#"{"id":"1234567890","type":"kdeconnect.ping","body":{}}"#;
+        let json_data = r#"{"id":"1234567890","type":"cconnect.ping","body":{}}"#;
         let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();
 
         assert_eq!(packet.id, 1234567890);
@@ -341,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_with_payload_size() {
-        let packet = Packet::new("kdeconnect.share", json!({})).with_payload_size(1024);
+        let packet = Packet::new("cconnect.share", json!({})).with_payload_size(1024);
 
         assert_eq!(packet.payload_size, Some(1024));
     }
@@ -351,7 +351,7 @@ mod tests {
         let mut info = HashMap::new();
         info.insert("port".to_string(), json!(1739));
 
-        let packet = Packet::new("kdeconnect.share", json!({})).with_payload_transfer_info(info);
+        let packet = Packet::new("cconnect.share", json!({})).with_payload_transfer_info(info);
 
         assert!(packet.payload_transfer_info.is_some());
         let port = packet
@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let packet = Packet::new("kdeconnect.identity", json!({}))
+        let packet = Packet::new("cconnect.identity", json!({}))
             .with_body_field("deviceId", "test-device")
             .with_body_field("deviceName", "Test Device")
             .with_body_field("protocolVersion", 7);
@@ -378,15 +378,15 @@ mod tests {
 
     #[test]
     fn test_is_type() {
-        let packet = Packet::new("kdeconnect.ping", json!({}));
-        assert!(packet.is_type("kdeconnect.ping"));
-        assert!(!packet.is_type("kdeconnect.battery"));
+        let packet = Packet::new("cconnect.ping", json!({}));
+        assert!(packet.is_type("cconnect.ping"));
+        assert!(!packet.is_type("cconnect.battery"));
     }
 
     #[test]
     fn test_get_body_field() {
         let packet = Packet::new(
-            "kdeconnect.battery",
+            "cconnect.battery",
             json!({
                 "isCharging": true,
                 "currentCharge": 85
@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn test_complex_body() {
         let packet = Packet::new(
-            "kdeconnect.notification",
+            "cconnect.notification",
             json!({
                 "id": "notification-123",
                 "appName": "Test App",
@@ -431,7 +431,7 @@ mod tests {
         let bytes = packet.to_bytes().unwrap();
         let parsed = Packet::from_bytes(&bytes).unwrap();
 
-        assert_eq!(parsed.packet_type, "kdeconnect.notification");
+        assert_eq!(parsed.packet_type, "cconnect.notification");
         assert_eq!(
             parsed.get_body_field::<String>("appName"),
             Some("Test App".to_string())

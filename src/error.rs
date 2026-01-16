@@ -8,7 +8,7 @@ pub type Result<T> = std::result::Result<T, ProtocolError>;
 
 /// Protocol error types
 ///
-/// All errors that can occur in the KDE Connect protocol implementation.
+/// All errors that can occur in the COSMIC Connect protocol implementation.
 /// These are designed to be FFI-compatible when using uniffi.
 #[derive(Debug, Error)]
 pub enum ProtocolError {

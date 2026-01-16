@@ -174,8 +174,8 @@ mod tests {
 
     #[test]
     fn test_transport_address_display() {
-        let tcp_addr = TransportAddress::Tcp("192.168.1.100:1716".parse().unwrap());
-        assert_eq!(tcp_addr.to_string(), "tcp://192.168.1.100:1716");
+        let tcp_addr = TransportAddress::Tcp("192.168.1.100:1816".parse().unwrap());
+        assert_eq!(tcp_addr.to_string(), "tcp://192.168.1.100:1816");
 
         let bt_addr = TransportAddress::Bluetooth {
             address: "00:11:22:33:44:55".to_string(),

@@ -6,10 +6,10 @@
 //! ## Packet Types
 //!
 //! - **Incoming**:
-//!   - `kdeconnect.battery` - Receive battery status from remote device
-//!   - `kdeconnect.battery.request` - Request for our battery status
+//!   - `cconnect.battery` - Receive battery status from remote device
+//!   - `cconnect.battery.request` - Request for our battery status
 //! - **Outgoing**:
-//!   - `kdeconnect.battery` - Send battery status to remote device
+//!   - `cconnect.battery` - Send battery status to remote device
 //!
 //! ## Example
 //!
@@ -140,7 +140,7 @@ impl BatteryPlugin {
     pub fn create_battery_packet(&self) -> Option<Packet> {
         self.local_battery.as_ref().map(|state| {
             Packet::new(
-                "kdeconnect.battery",
+                "cconnect.battery",
                 json!({
                     "isCharging": state.is_charging,
                     "currentCharge": state.current_charge,
@@ -165,18 +165,18 @@ impl Plugin for BatteryPlugin {
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
-            "kdeconnect.battery".to_string(),
-            "kdeconnect.battery.request".to_string(),
+            "cconnect.battery".to_string(),
+            "cconnect.battery.request".to_string(),
         ]
     }
 
     fn outgoing_capabilities(&self) -> Vec<String> {
-        vec!["kdeconnect.battery".to_string()]
+        vec!["cconnect.battery".to_string()]
     }
 
     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
-            "kdeconnect.battery" => {
+            "cconnect.battery" => {
                 // Receive remote battery status
                 let state: BatteryState = serde_json::from_value(packet.body.clone())
                     .map_err(|e| {
@@ -202,7 +202,7 @@ impl Plugin for BatteryPlugin {
                 self.remote_battery = Some(state);
             }
 
-            "kdeconnect.battery.request" => {
+            "cconnect.battery.request" => {
                 // Remote device is requesting our battery status
                 info!("Received battery status request");
 
@@ -280,10 +280,10 @@ mod tests {
         let outgoing = plugin.outgoing_capabilities();
 
         assert_eq!(incoming.len(), 2);
-        assert!(incoming.contains(&"kdeconnect.battery".to_string()));
-        assert!(incoming.contains(&"kdeconnect.battery.request".to_string()));
+        assert!(incoming.contains(&"cconnect.battery".to_string()));
+        assert!(incoming.contains(&"cconnect.battery.request".to_string()));
 
-        assert_eq!(outgoing, vec!["kdeconnect.battery"]);
+        assert_eq!(outgoing, vec!["cconnect.battery"]);
     }
 
     #[tokio::test]
@@ -303,7 +303,7 @@ mod tests {
         let mut plugin = BatteryPlugin::new();
 
         let packet = Packet::new(
-            "kdeconnect.battery",
+            "cconnect.battery",
             json!({
                 "isCharging": false,
                 "currentCharge": 50,
@@ -322,7 +322,7 @@ mod tests {
     async fn test_handle_battery_request() {
         let mut plugin = BatteryPlugin::new();
 
-        let packet = Packet::new("kdeconnect.battery.request", json!({}));
+        let packet = Packet::new("cconnect.battery.request", json!({}));
 
         // Should not error
         plugin.handle_packet(&packet).await.unwrap();
@@ -341,7 +341,7 @@ mod tests {
 
         // Now we can create packet
         let packet = plugin.create_battery_packet().unwrap();
-        assert_eq!(packet.packet_type, "kdeconnect.battery");
+        assert_eq!(packet.packet_type, "cconnect.battery");
 
         let charge = packet
             .body

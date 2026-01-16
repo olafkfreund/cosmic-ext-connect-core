@@ -14,12 +14,12 @@ use tokio::sync::{mpsc, RwLock};
 use tokio::time::interval;
 use tracing::{debug, error, info, warn};
 
-/// Default UDP port for device discovery
-pub const DISCOVERY_PORT: u16 = 1716;
+/// Default UDP port for device discovery (COSMIC Connect uses 1816 to avoid conflict with KDE Connect's 1716)
+pub const DISCOVERY_PORT: u16 = 1816;
 
 /// Port range for fallback when primary port is unavailable
-pub const PORT_RANGE_START: u16 = 1714;
-pub const PORT_RANGE_END: u16 = 1764;
+pub const PORT_RANGE_START: u16 = 1814;
+pub const PORT_RANGE_END: u16 = 1864;
 
 /// Broadcast address for IPv4
 pub const BROADCAST_ADDR: Ipv4Addr = Ipv4Addr::new(255, 255, 255, 255);
@@ -327,7 +327,7 @@ impl DiscoveryService {
         // Parse packet
         let packet = Packet::from_bytes(data)?;
 
-        if !packet.is_type("kdeconnect.identity") {
+        if !packet.is_type("cconnect.identity") {
             debug!("Ignoring non-identity packet from {}", src_addr);
             return Ok(());
         }
@@ -449,14 +449,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_discovery_service_creation() {
-        let device_info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
+        let device_info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1816);
         let service = DiscoveryService::with_defaults(device_info);
         assert!(service.is_ok());
     }
 
     #[tokio::test]
     async fn test_discovery_service_port() {
-        let device_info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
+        let device_info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1816);
         let service = DiscoveryService::with_defaults(device_info).unwrap();
         let port = service.local_port().unwrap();
         assert!(port >= PORT_RANGE_START && port <= PORT_RANGE_END);

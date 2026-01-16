@@ -49,7 +49,7 @@ namespace cosmic_connect_core {
   ///
   /// # Arguments
   ///
-  /// * `packet_type` - Packet type (e.g., "kdeconnect.ping")
+  /// * `packet_type` - Packet type (e.g., "cconnect.ping")
   /// * `body` - JSON string containing packet body
   [Throws=ProtocolError]
   FfiPacket create_packet(string packet_type, string body);

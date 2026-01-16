@@ -33,11 +33,11 @@
 //!     }
 //!
 //!     fn incoming_capabilities(&self) -> Vec<String> {
-//!         vec!["kdeconnect.myplugin".to_string()]
+//!         vec!["cconnect.myplugin".to_string()]
 //!     }
 //!
 //!     fn outgoing_capabilities(&self) -> Vec<String> {
-//!         vec!["kdeconnect.myplugin".to_string()]
+//!         vec!["cconnect.myplugin".to_string()]
 //!     }
 //!
 //!     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
@@ -81,7 +81,7 @@ pub trait Plugin: Send + Sync {
     /// Get the plugin name
     ///
     /// This should be a unique identifier for the plugin, typically matching
-    /// the plugin name in packet types (e.g., "battery" for "kdeconnect.battery").
+    /// the plugin name in packet types (e.g., "battery" for "cconnect.battery").
     ///
     /// # Examples
     ///
@@ -102,8 +102,8 @@ pub trait Plugin: Send + Sync {
     /// ```ignore
     /// fn incoming_capabilities(&self) -> Vec<String> {
     ///     vec![
-    ///         "kdeconnect.battery".to_string(),
-    ///         "kdeconnect.battery.request".to_string(),
+    ///         "cconnect.battery".to_string(),
+    ///         "cconnect.battery.request".to_string(),
     ///     ]
     /// }
     /// ```
@@ -118,7 +118,7 @@ pub trait Plugin: Send + Sync {
     ///
     /// ```ignore
     /// fn outgoing_capabilities(&self) -> Vec<String> {
-    ///     vec!["kdeconnect.battery".to_string()]
+    ///     vec!["cconnect.battery".to_string()]
     /// }
     /// ```
     fn outgoing_capabilities(&self) -> Vec<String>;
@@ -142,8 +142,8 @@ pub trait Plugin: Send + Sync {
     /// ```ignore
     /// async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
     ///     match packet.packet_type.as_str() {
-    ///         "kdeconnect.battery.request" => self.send_battery_state().await,
-    ///         "kdeconnect.battery" => self.update_battery_state(packet).await,
+    ///         "cconnect.battery.request" => self.send_battery_state().await,
+    ///         "cconnect.battery" => self.update_battery_state(packet).await,
     ///         _ => Ok(()),
     ///     }
     /// }
@@ -292,11 +292,11 @@ mod tests {
         }
 
         fn incoming_capabilities(&self) -> Vec<String> {
-            vec!["kdeconnect.test".to_string()]
+            vec!["cconnect.test".to_string()]
         }
 
         fn outgoing_capabilities(&self) -> Vec<String> {
-            vec!["kdeconnect.test.response".to_string()]
+            vec!["cconnect.test.response".to_string()]
         }
 
         async fn handle_packet(&mut self, _packet: &Packet) -> Result<()> {
@@ -340,8 +340,8 @@ mod tests {
             shutdown: false,
         };
 
-        assert!(plugin.handles_packet_type("kdeconnect.test"));
-        assert!(!plugin.handles_packet_type("kdeconnect.other"));
+        assert!(plugin.handles_packet_type("cconnect.test"));
+        assert!(!plugin.handles_packet_type("cconnect.other"));
     }
 
     #[test]
@@ -353,8 +353,8 @@ mod tests {
         };
 
         let (incoming, outgoing) = plugin.get_capabilities();
-        assert_eq!(incoming, vec!["kdeconnect.test"]);
-        assert_eq!(outgoing, vec!["kdeconnect.test.response"]);
+        assert_eq!(incoming, vec!["cconnect.test"]);
+        assert_eq!(outgoing, vec!["cconnect.test.response"]);
     }
 
     #[test]

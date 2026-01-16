@@ -58,7 +58,7 @@
 //! println!("Outgoing capabilities: {:?}", outgoing);
 //!
 //! // Route incoming packet
-//! let packet = Packet::new("kdeconnect.ping", json!({}));
+//! let packet = Packet::new("cconnect.ping", json!({}));
 //! manager.route_packet(&packet).await?;
 //!
 //! // Shutdown
@@ -88,11 +88,11 @@
 //!     }
 //!
 //!     fn incoming_capabilities(&self) -> Vec<String> {
-//!         vec!["kdeconnect.myplugin".to_string()]
+//!         vec!["cconnect.myplugin".to_string()]
 //!     }
 //!
 //!     fn outgoing_capabilities(&self) -> Vec<String> {
-//!         vec!["kdeconnect.myplugin.response".to_string()]
+//!         vec!["cconnect.myplugin.response".to_string()]
 //!     }
 //!
 //!     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
@@ -172,21 +172,21 @@ mod tests {
         let (incoming, outgoing) = manager.get_capabilities().await;
 
         // Ping capabilities
-        assert!(incoming.contains(&"kdeconnect.ping".to_string()));
-        assert!(outgoing.contains(&"kdeconnect.ping".to_string()));
+        assert!(incoming.contains(&"cconnect.ping".to_string()));
+        assert!(outgoing.contains(&"cconnect.ping".to_string()));
 
         // Battery capabilities
-        assert!(incoming.contains(&"kdeconnect.battery".to_string()));
-        assert!(incoming.contains(&"kdeconnect.battery.request".to_string()));
-        assert!(outgoing.contains(&"kdeconnect.battery".to_string()));
+        assert!(incoming.contains(&"cconnect.battery".to_string()));
+        assert!(incoming.contains(&"cconnect.battery.request".to_string()));
+        assert!(outgoing.contains(&"cconnect.battery".to_string()));
 
         // Route ping packet
-        let ping_packet = Packet::new("kdeconnect.ping", json!({}));
+        let ping_packet = Packet::new("cconnect.ping", json!({}));
         manager.route_packet(&ping_packet).await.unwrap();
 
         // Route battery packet
         let battery_packet = Packet::new(
-            "kdeconnect.battery",
+            "cconnect.battery",
             json!({
                 "isCharging": true,
                 "currentCharge": 75,

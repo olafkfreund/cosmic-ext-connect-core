@@ -3,7 +3,7 @@
 //! Network communication layer for KDE Connect protocol.
 //!
 //! This module contains:
-//! - `Discovery`: UDP device discovery on port 1716
+//! - `Discovery`: UDP device discovery on port 1816
 //! - `Transport`: Transport abstraction (TCP, Bluetooth)
 //! - `TcpTransport`: TCP connection management (TODO: Extract from applet)
 //! - `TlsTransport`: Secure TLS connections (TODO: Rewrite with rustls)

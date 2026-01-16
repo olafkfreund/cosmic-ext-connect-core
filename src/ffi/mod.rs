@@ -285,7 +285,7 @@ pub fn create_file_share_packet(
         body["lastModified"] = json!(time);
     }
 
-    let mut packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    let mut packet = Packet::new("cconnect.share.request".to_string(), body);
     packet.payload_size = Some(size);
 
     Ok(packet.into())
@@ -304,7 +304,7 @@ pub fn create_text_share_packet(text: String) -> Result<FfiPacket> {
         "text": text,
     });
 
-    let packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    let packet = Packet::new("cconnect.share.request".to_string(), body);
     Ok(packet.into())
 }
 
@@ -321,7 +321,7 @@ pub fn create_url_share_packet(url: String) -> Result<FfiPacket> {
         "url": url,
     });
 
-    let packet = Packet::new("kdeconnect.share.request".to_string(), body);
+    let packet = Packet::new("cconnect.share.request".to_string(), body);
     Ok(packet.into())
 }
 
@@ -344,7 +344,7 @@ pub fn create_multifile_update_packet(
         "totalPayloadSize": total_payload_size,
     });
 
-    let packet = Packet::new("kdeconnect.share.request.update".to_string(), body);
+    let packet = Packet::new("cconnect.share.request.update".to_string(), body);
     Ok(packet.into())
 }
 
@@ -375,7 +375,7 @@ pub fn create_clipboard_packet(content: String) -> Result<FfiPacket> {
         "content": content,
     });
 
-    let packet = Packet::new("kdeconnect.clipboard".to_string(), body);
+    let packet = Packet::new("cconnect.clipboard".to_string(), body);
     Ok(packet.into())
 }
 
@@ -407,7 +407,7 @@ pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Resul
         "timestamp": timestamp,
     });
 
-    let packet = Packet::new("kdeconnect.clipboard.connect".to_string(), body);
+    let packet = Packet::new("cconnect.clipboard.connect".to_string(), body);
     Ok(packet.into())
 }
 
@@ -434,7 +434,7 @@ pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Resul
 pub fn create_findmyphone_request() -> Result<FfiPacket> {
     use serde_json::json;
 
-    let packet = Packet::new("kdeconnect.findmyphone.request".to_string(), json!({}));
+    let packet = Packet::new("cconnect.findmyphone.request".to_string(), json!({}));
     Ok(packet.into())
 }
 
@@ -451,7 +451,7 @@ pub fn create_findmyphone_request() -> Result<FfiPacket> {
 /// ```json
 /// {
 ///     "id": 1234567890,
-///     "type": "kdeconnect.runcommand.request",
+///     "type": "cconnect.runcommand.request",
 ///     "body": {
 ///         "requestCommandList": true
 ///     }
@@ -470,7 +470,7 @@ pub fn create_runcommand_request_list() -> Result<FfiPacket> {
     use serde_json::json;
 
     let packet = Packet::new(
-        "kdeconnect.runcommand.request".to_string(),
+        "cconnect.runcommand.request".to_string(),
         json!({
             "requestCommandList": true
         }),
@@ -491,7 +491,7 @@ pub fn create_runcommand_request_list() -> Result<FfiPacket> {
 /// ```json
 /// {
 ///     "id": 1234567890,
-///     "type": "kdeconnect.runcommand.request",
+///     "type": "cconnect.runcommand.request",
 ///     "body": {
 ///         "key": "cmd1"
 ///     }
@@ -510,7 +510,7 @@ pub fn create_runcommand_execute(command_key: String) -> Result<FfiPacket> {
     use serde_json::json;
 
     let packet = Packet::new(
-        "kdeconnect.runcommand.request".to_string(),
+        "cconnect.runcommand.request".to_string(),
         json!({
             "key": command_key
         }),
@@ -527,7 +527,7 @@ pub fn create_runcommand_execute(command_key: String) -> Result<FfiPacket> {
 /// ```json
 /// {
 ///     "id": 1234567890,
-///     "type": "kdeconnect.runcommand.request",
+///     "type": "cconnect.runcommand.request",
 ///     "body": {
 ///         "setup": true
 ///     }
@@ -546,7 +546,7 @@ pub fn create_runcommand_setup() -> Result<FfiPacket> {
     use serde_json::json;
 
     let packet = Packet::new(
-        "kdeconnect.runcommand.request".to_string(),
+        "cconnect.runcommand.request".to_string(),
         json!({
             "setup": true
         }),
@@ -599,7 +599,7 @@ pub fn create_telephony_event(
         body["contactName"] = json!(name);
     }
 
-    let packet = Packet::new("kdeconnect.telephony".to_string(), body);
+    let packet = Packet::new("cconnect.telephony".to_string(), body);
     Ok(packet.into())
 }
 
@@ -619,7 +619,7 @@ pub fn create_telephony_event(
 pub fn create_mute_request() -> Result<FfiPacket> {
     use serde_json::json;
 
-    let packet = Packet::new("kdeconnect.telephony.request_mute".to_string(), json!({}));
+    let packet = Packet::new("cconnect.telephony.request_mute".to_string(), json!({}));
     Ok(packet.into())
 }
 
@@ -669,7 +669,7 @@ pub fn create_sms_messages(conversations_json: String) -> Result<FfiPacket> {
     let body: Value = serde_json::from_str(&conversations_json)
         .map_err(|e| ProtocolError::InvalidPacket(format!("Invalid SMS JSON: {}", e)))?;
 
-    let packet = Packet::new("kdeconnect.sms.messages".to_string(), body);
+    let packet = Packet::new("cconnect.sms.messages".to_string(), body);
     Ok(packet.into())
 }
 
@@ -690,7 +690,7 @@ pub fn create_conversations_request() -> Result<FfiPacket> {
     use serde_json::json;
 
     let packet = Packet::new(
-        "kdeconnect.sms.request_conversations".to_string(),
+        "cconnect.sms.request_conversations".to_string(),
         json!({}),
     );
     Ok(packet.into())
@@ -734,7 +734,7 @@ pub fn create_conversation_request(
         body["numberToRequest"] = json!(n);
     }
 
-    let packet = Packet::new("kdeconnect.sms.request_conversation".to_string(), body);
+    let packet = Packet::new("cconnect.sms.request_conversation".to_string(), body);
     Ok(packet.into())
 }
 
@@ -763,7 +763,7 @@ pub fn create_attachment_request(part_id: i64, unique_identifier: String) -> Res
         "unique_identifier": unique_identifier,
     });
 
-    let packet = Packet::new("kdeconnect.sms.request_attachment".to_string(), body);
+    let packet = Packet::new("cconnect.sms.request_attachment".to_string(), body);
     Ok(packet.into())
 }
 
@@ -795,7 +795,7 @@ pub fn create_send_sms_request(phone_number: String, message_body: String) -> Re
         "messageBody": message_body,
     });
 
-    let packet = Packet::new("kdeconnect.sms.request".to_string(), body);
+    let packet = Packet::new("cconnect.sms.request".to_string(), body);
     Ok(packet.into())
 }
 
@@ -842,7 +842,7 @@ pub fn create_battery_packet(
         "thresholdEvent": threshold_event,
     });
 
-    let packet = Packet::new("kdeconnect.battery".to_string(), body);
+    let packet = Packet::new("cconnect.battery".to_string(), body);
     Ok(packet.into())
 }
 
@@ -864,7 +864,7 @@ pub fn create_battery_packet(
 pub fn create_battery_request() -> Result<FfiPacket> {
     use serde_json::json;
 
-    let packet = Packet::new("kdeconnect.battery.request".to_string(), json!({}));
+    let packet = Packet::new("cconnect.battery.request".to_string(), json!({}));
     Ok(packet.into())
 }
 
@@ -874,7 +874,7 @@ pub fn create_battery_request() -> Result<FfiPacket> {
 
 /// Create a full notification packet.
 ///
-/// Creates a `kdeconnect.notification` packet for sending notification data
+/// Creates a `cconnect.notification` packet for sending notification data
 /// from Android to desktop. The notification data is passed as a JSON string
 /// to avoid a massive parameter list (12+ fields).
 ///
@@ -944,7 +944,7 @@ pub fn create_notification_packet(notification_json: String) -> Result<FfiPacket
 
 /// Create a cancel notification packet.
 ///
-/// Creates a `kdeconnect.notification` packet with `isCancel: true` to
+/// Creates a `cconnect.notification` packet with `isCancel: true` to
 /// inform the desktop that a notification has been dismissed on Android.
 ///
 /// # Arguments
@@ -971,7 +971,7 @@ pub fn create_cancel_notification_packet(notification_id: String) -> Result<FfiP
 
 /// Create a notification request packet.
 ///
-/// Creates a `kdeconnect.notification.request` packet with `request: true`
+/// Creates a `cconnect.notification.request` packet with `request: true`
 /// to ask the remote device to send all its current notifications.
 ///
 /// This is typically sent when devices connect to sync existing notifications.
@@ -996,7 +996,7 @@ pub fn create_notification_request_packet() -> Result<FfiPacket> {
 
 /// Create a dismiss notification packet.
 ///
-/// Creates a `kdeconnect.notification.request` packet with a `cancel` field
+/// Creates a `cconnect.notification.request` packet with a `cancel` field
 /// to request the remote device to dismiss a specific notification.
 ///
 /// # Arguments
@@ -1023,7 +1023,7 @@ pub fn create_dismiss_notification_packet(notification_id: String) -> Result<Ffi
 
 /// Create a notification action packet.
 ///
-/// Creates a `kdeconnect.notification.action` packet to trigger an
+/// Creates a `cconnect.notification.action` packet to trigger an
 /// action button on a remote notification.
 ///
 /// # Arguments
@@ -1054,13 +1054,13 @@ pub fn create_notification_action_packet(
         "action": action_name,
     });
 
-    let packet = Packet::new("kdeconnect.notification.action".to_string(), body);
+    let packet = Packet::new("cconnect.notification.action".to_string(), body);
     Ok(packet.into())
 }
 
 /// Create a notification reply packet.
 ///
-/// Creates a `kdeconnect.notification.reply` packet to send an inline
+/// Creates a `cconnect.notification.reply` packet to send an inline
 /// reply to a notification that supports replies (typically messaging apps).
 ///
 /// # Arguments
@@ -1091,7 +1091,7 @@ pub fn create_notification_reply_packet(
         "message": message,
     });
 
-    let packet = Packet::new("kdeconnect.notification.reply".to_string(), body);
+    let packet = Packet::new("cconnect.notification.reply".to_string(), body);
     Ok(packet.into())
 }
 
@@ -1531,10 +1531,10 @@ mod tests {
 
     #[test]
     fn test_ffi_packet_conversion() {
-        let packet = Packet::new("kdeconnect.ping", json!({"message": "hello"}));
+        let packet = Packet::new("cconnect.ping", json!({"message": "hello"}));
         let ffi_packet: FfiPacket = packet.clone().into();
 
-        assert_eq!(ffi_packet.packet_type, "kdeconnect.ping");
+        assert_eq!(ffi_packet.packet_type, "cconnect.ping");
         assert!(ffi_packet.body.contains("hello"));
 
         let core_packet: Packet = ffi_packet.try_into().unwrap();
@@ -1556,17 +1556,17 @@ mod tests {
     #[test]
     fn test_create_packet() {
         let packet = create_packet(
-            "kdeconnect.ping".to_string(),
+            "cconnect.ping".to_string(),
             "{}".to_string(),
         ).unwrap();
 
-        assert_eq!(packet.packet_type, "kdeconnect.ping");
+        assert_eq!(packet.packet_type, "cconnect.ping");
     }
 
     #[test]
     fn test_serialize_deserialize() {
         let packet = create_packet(
-            "kdeconnect.ping".to_string(),
+            "cconnect.ping".to_string(),
             r#"{"message":"test"}"#.to_string(),
         ).unwrap();
 
@@ -1615,7 +1615,7 @@ mod tests {
 
         let caps = manager.get_capabilities();
 
-        assert!(caps.incoming.contains(&"kdeconnect.ping".to_string()));
-        assert!(caps.incoming.contains(&"kdeconnect.battery".to_string()));
+        assert!(caps.incoming.contains(&"cconnect.ping".to_string()));
+        assert!(caps.incoming.contains(&"cconnect.battery".to_string()));
     }
 }

@@ -6,21 +6,21 @@
 //! ## Protocol
 //!
 //! **Packet Types**:
-//! - `kdeconnect.runcommand` - Command list response (outgoing)
-//! - `kdeconnect.runcommand.request` - Command execution request (incoming)
+//! - `cconnect.runcommand` - Command list response (outgoing)
+//! - `cconnect.runcommand.request` - Command execution request (incoming)
 //!
 //! **Capabilities**:
-//! - Incoming: `kdeconnect.runcommand.request` - Receives command execution requests
-//! - Outgoing: `kdeconnect.runcommand` - Sends command list to devices
+//! - Incoming: `cconnect.runcommand.request` - Receives command execution requests
+//! - Outgoing: `cconnect.runcommand` - Sends command list to devices
 //!
 //! ## Packet Formats
 //!
-//! ### Command List Response (`kdeconnect.runcommand`)
+//! ### Command List Response (`cconnect.runcommand`)
 //!
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.runcommand",
+//!     "type": "cconnect.runcommand",
 //!     "body": {
 //!         "commandList": "{\"cmd1\":{\"name\":\"List Files\",\"command\":\"ls -la\"},\"cmd2\":{...}}",
 //!         "canAddCommand": true
@@ -28,13 +28,13 @@
 //! }
 //! ```
 //!
-//! ### Command Execution Request (`kdeconnect.runcommand.request`)
+//! ### Command Execution Request (`cconnect.runcommand.request`)
 //!
 //! Execute a specific command:
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.runcommand.request",
+//!     "type": "cconnect.runcommand.request",
 //!     "body": {
 //!         "key": "cmd1"
 //!     }
@@ -45,7 +45,7 @@
 //! ```json
 //! {
 //!     "id": 1234567890,
-//!     "type": "kdeconnect.runcommand.request",
+//!     "type": "cconnect.runcommand.request",
 //!     "body": {
 //!         "requestCommandList": true
 //!     }
@@ -55,7 +55,7 @@
 //! ## Configuration
 //!
 //! Commands are stored in a JSON configuration file per device:
-//! `~/.config/kdeconnect/<device_id>/kdeconnect_runcommand/commands.json`
+//! `~/.config/cosmic-connect/<device_id>/cosmic_connect_runcommand/commands.json`
 //!
 //! ```json
 //! {
@@ -150,7 +150,7 @@ struct RunCommandConfig {
 
 /// RunCommand plugin for remote command execution
 ///
-/// Handles `kdeconnect.runcommand.request` packets and executes
+/// Handles `cconnect.runcommand.request` packets and executes
 /// pre-configured shell commands.
 ///
 /// ## Features
@@ -206,7 +206,7 @@ impl RunCommandPlugin {
 
     /// Get the configuration file path for a device
     fn get_config_path(device_id: &str) -> Result<PathBuf> {
-        // Use $HOME/.config/kdeconnect/<device_id>/kdeconnect_runcommand/commands.json
+        // Use $HOME/.config/cosmic-connect/<device_id>/cosmic_connect_runcommand/commands.json
         let home_dir = std::env::var("HOME")
             .or_else(|_| std::env::var("USERPROFILE"))
             .map_err(|_| {
@@ -218,9 +218,9 @@ impl RunCommandPlugin {
 
         let plugin_dir = PathBuf::from(home_dir)
             .join(".config")
-            .join("kdeconnect")
+            .join("cosmic-connect")
             .join(device_id)
-            .join("kdeconnect_runcommand");
+            .join("cosmic_connect_runcommand");
 
         Ok(plugin_dir.join("commands.json"))
     }
@@ -354,7 +354,7 @@ impl RunCommandPlugin {
 
     /// Create a command list packet
     ///
-    /// Creates a `kdeconnect.runcommand` packet containing all configured commands.
+    /// Creates a `cconnect.runcommand` packet containing all configured commands.
     ///
     /// # Returns
     ///
@@ -367,7 +367,7 @@ impl RunCommandPlugin {
             .unwrap_or_else(|_| "{}".to_string());
 
         Packet::new(
-            "kdeconnect.runcommand",
+            "cconnect.runcommand",
             json!({
                 "commandList": command_list_json,
                 "canAddCommand": true
@@ -496,11 +496,11 @@ impl Plugin for RunCommandPlugin {
 
 
     fn incoming_capabilities(&self) -> Vec<String> {
-        vec!["kdeconnect.runcommand.request".to_string()]
+        vec!["cconnect.runcommand.request".to_string()]
     }
 
     fn outgoing_capabilities(&self) -> Vec<String> {
-        vec!["kdeconnect.runcommand".to_string()]
+        vec!["cconnect.runcommand".to_string()]
     }
 
     async fn initialize(&mut self) -> Result<()> {
@@ -535,7 +535,7 @@ impl Plugin for RunCommandPlugin {
     }
 
     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
-        if packet.packet_type == "kdeconnect.runcommand.request" {
+        if packet.packet_type == "cconnect.runcommand.request" {
             if let Some(_response) = self.handle_request(packet).await? {
                 // Response packet would need to be sent via connection manager
                 // This will be handled by the daemon
@@ -567,7 +567,7 @@ mod tests {
     use crate::{DeviceInfo, DeviceType};
 
     fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
+        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1816);
         Device::from_discovery(info)
     }
 
@@ -583,11 +583,11 @@ mod tests {
 
         let incoming = plugin.incoming_capabilities();
         assert_eq!(incoming.len(), 1);
-        assert_eq!(incoming[0], "kdeconnect.runcommand.request");
+        assert_eq!(incoming[0], "cconnect.runcommand.request");
 
         let outgoing = plugin.outgoing_capabilities();
         assert_eq!(outgoing.len(), 1);
-        assert_eq!(outgoing[0], "kdeconnect.runcommand");
+        assert_eq!(outgoing[0], "cconnect.runcommand");
     }
 
     #[test]
@@ -683,7 +683,7 @@ mod tests {
 
         let packet = plugin.create_command_list_packet().await;
 
-        assert_eq!(packet.packet_type, "kdeconnect.runcommand");
+        assert_eq!(packet.packet_type, "cconnect.runcommand");
         assert!(packet.body.get("commandList").is_some());
         assert_eq!(
             packet.body.get("canAddCommand").and_then(|v| v.as_bool()),
@@ -711,7 +711,7 @@ mod tests {
 
         // Create request packet
         let packet = Packet::new(
-            "kdeconnect.runcommand.request",
+            "cconnect.runcommand.request",
             json!({ "requestCommandList": true }),
         );
 
@@ -719,7 +719,7 @@ mod tests {
 
         assert!(response.is_some());
         let response = response.unwrap();
-        assert_eq!(response.packet_type, "kdeconnect.runcommand");
+        assert_eq!(response.packet_type, "cconnect.runcommand");
     }
 
     #[tokio::test]

@@ -6,13 +6,13 @@
 //! ## Protocol
 //!
 //! **Packet Types**:
-//! - `kdeconnect.mousepad.request` - Remote input request (incoming)
-//! - `kdeconnect.mousepad.echo` - Echo response (outgoing)
-//! - `kdeconnect.mousepad.keyboardstate` - Keyboard state broadcast (outgoing)
+//! - `cconnect.mousepad.request` - Remote input request (incoming)
+//! - `cconnect.mousepad.echo` - Echo response (outgoing)
+//! - `cconnect.mousepad.keyboardstate` - Keyboard state broadcast (outgoing)
 //!
 //! **Capabilities**:
-//! - Incoming: `kdeconnect.mousepad.request` - Receives pointer and keyboard events
-//! - Outgoing: `kdeconnect.mousepad.keyboardstate` - Sends keyboard support status
+//! - Incoming: `cconnect.mousepad.request` - Receives pointer and keyboard events
+//! - Outgoing: `cconnect.mousepad.keyboardstate` - Sends keyboard support status
 //!
 //! ## References
 //!
@@ -31,13 +31,13 @@ use tracing::{debug, error, info, warn};
 use crate::plugins::Plugin;
 
 /// Packet type for remote input requests
-pub const PACKET_TYPE_MOUSEPAD_REQUEST: &str = "kdeconnect.mousepad.request";
+pub const PACKET_TYPE_MOUSEPAD_REQUEST: &str = "cconnect.mousepad.request";
 
 /// Packet type for echo responses
-pub const PACKET_TYPE_MOUSEPAD_ECHO: &str = "kdeconnect.mousepad.echo";
+pub const PACKET_TYPE_MOUSEPAD_ECHO: &str = "cconnect.mousepad.echo";
 
 /// Packet type for keyboard state
-pub const PACKET_TYPE_MOUSEPAD_KEYBOARDSTATE: &str = "kdeconnect.mousepad.keyboardstate";
+pub const PACKET_TYPE_MOUSEPAD_KEYBOARDSTATE: &str = "cconnect.mousepad.keyboardstate";
 
 /// Special key codes for non-printable characters
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -448,7 +448,7 @@ mod tests {
     use crate::{DeviceInfo, DeviceType};
 
     fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
+        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1816);
         Device::from_discovery(info)
     }
 
@@ -475,7 +475,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "dx": 10.0,
                 "dy": 20.0
@@ -494,7 +494,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "singleclick": true
             }),
@@ -512,7 +512,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "key": "a"
             }),
@@ -530,7 +530,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "specialKey": 1
             }),
@@ -548,7 +548,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "dx": 0.0,
                 "dy": -5.0,
@@ -568,7 +568,7 @@ mod tests {
         plugin.init(&device).await.unwrap();
 
         let packet = Packet::new(
-            "kdeconnect.mousepad.request",
+            "cconnect.mousepad.request",
             serde_json::json!({
                 "key": "c",
                 "ctrl": true
