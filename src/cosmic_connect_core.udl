@@ -546,6 +546,19 @@ namespace cosmic_connect_core {
   /// * `body_json` - JSON string containing player name and command
   [Throws=ProtocolError]
   FfiPacket create_mpris_request(string body_json);
+
+  // MousePad Plugin
+
+  /// Create a MousePad request packet
+  ///
+  /// Creates a packet for sending mouse and keyboard events to the remote device.
+  /// Supports mouse movement, clicks, scroll, and keyboard input.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing command and parameters
+  [Throws=ProtocolError]
+  FfiPacket create_mousepad_request(string body_json);
 };
 
 // ==========================================================================

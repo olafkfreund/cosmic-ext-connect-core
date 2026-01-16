@@ -1506,6 +1506,47 @@ pub fn create_mpris_request(body_json: String) -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// MousePad Plugin
+// ==========================================================================
+
+/// Create MousePad request packet
+///
+/// Creates a packet for sending mouse and keyboard events to the remote device.
+/// Supports mouse movement, clicks, scroll, and keyboard input.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing command and parameters
+///
+/// # Example
+///
+/// ```json
+/// // Mouse movement
+/// {
+///   "dx": 10.0,
+///   "dy": -5.0
+/// }
+///
+/// // Mouse click
+/// {
+///   "singleclick": true
+/// }
+///
+/// // Keyboard input
+/// {
+///   "key": "a",
+///   "specialKey": 0
+/// }
+/// ```
+pub fn create_mousepad_request(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.mousepad.request", body_data);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 

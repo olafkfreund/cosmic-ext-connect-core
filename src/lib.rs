@@ -66,6 +66,7 @@ pub use ffi::{
     create_connectivity_report,
     create_contacts_response_uids, create_contacts_response_vcards,
     create_mpris_request,
+    create_mousepad_request,
 };
 
 // Public modules
