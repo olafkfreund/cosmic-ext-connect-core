@@ -439,6 +439,122 @@ pub fn create_findmyphone_request() -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// RunCommand Plugin FFI Functions
+// ==========================================================================
+
+/// Create a run command request list packet
+///
+/// Creates a packet requesting the list of available commands from the remote device.
+/// Used when the Android app wants to refresh its command list from the desktop.
+///
+/// # Packet Format
+/// ```json
+/// {
+///     "id": 1234567890,
+///     "type": "kdeconnect.runcommand.request",
+///     "body": {
+///         "requestCommandList": true
+///     }
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_runcommand_request_list;
+///
+/// let packet = create_runcommand_request_list()?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_runcommand_request_list() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new(
+        "kdeconnect.runcommand.request".to_string(),
+        json!({
+            "requestCommandList": true
+        }),
+    );
+    Ok(packet.into())
+}
+
+/// Create a run command execute packet
+///
+/// Creates a packet requesting execution of a specific pre-configured command
+/// on the remote device. The command key must correspond to a command ID
+/// configured on the desktop.
+///
+/// # Arguments
+/// * `command_key` - The unique key/ID of the command to execute
+///
+/// # Packet Format
+/// ```json
+/// {
+///     "id": 1234567890,
+///     "type": "kdeconnect.runcommand.request",
+///     "body": {
+///         "key": "cmd1"
+///     }
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_runcommand_execute;
+///
+/// let packet = create_runcommand_execute("backup".to_string())?;
+/// // Send packet to desktop to execute "backup" command...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_runcommand_execute(command_key: String) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new(
+        "kdeconnect.runcommand.request".to_string(),
+        json!({
+            "key": command_key
+        }),
+    );
+    Ok(packet.into())
+}
+
+/// Create a run command setup packet
+///
+/// Creates a packet requesting the remote device to open its command configuration
+/// interface. This allows the user to add/edit/remove available commands.
+///
+/// # Packet Format
+/// ```json
+/// {
+///     "id": 1234567890,
+///     "type": "kdeconnect.runcommand.request",
+///     "body": {
+///         "setup": true
+///     }
+/// }
+/// ```
+///
+/// # Example
+/// ```rust,no_run
+/// use cosmic_connect_core::create_runcommand_setup;
+///
+/// let packet = create_runcommand_setup()?;
+/// // Send packet to desktop to open command setup UI...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_runcommand_setup() -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let packet = Packet::new(
+        "kdeconnect.runcommand.request".to_string(),
+        json!({
+            "setup": true
+        }),
+    );
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Telephony Plugin FFI Functions
 // ==========================================================================
 

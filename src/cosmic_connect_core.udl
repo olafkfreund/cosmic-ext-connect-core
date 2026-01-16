@@ -202,6 +202,32 @@ namespace cosmic_connect_core {
   FfiPacket create_findmyphone_request();
 
   // ========================================================================
+  // RunCommand Plugin
+  // ========================================================================
+
+  /// Create a run command request list packet
+  ///
+  /// Creates a packet requesting the list of available commands from the remote device.
+  [Throws=ProtocolError]
+  FfiPacket create_runcommand_request_list();
+
+  /// Create a run command execute packet
+  ///
+  /// Creates a packet requesting execution of a specific command.
+  ///
+  /// # Arguments
+  ///
+  /// * `command_key` - The unique key/ID of the command to execute
+  [Throws=ProtocolError]
+  FfiPacket create_runcommand_execute(string command_key);
+
+  /// Create a run command setup packet
+  ///
+  /// Creates a packet requesting the remote device to open command setup interface.
+  [Throws=ProtocolError]
+  FfiPacket create_runcommand_setup();
+
+  // ========================================================================
   // Telephony Plugin
   // ========================================================================
 

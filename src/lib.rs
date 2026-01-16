@@ -52,6 +52,7 @@ pub use ffi::{
     create_multifile_update_packet, start_payload_download,
     create_clipboard_packet, create_clipboard_connect_packet,
     create_findmyphone_request,
+    create_runcommand_request_list, create_runcommand_execute, create_runcommand_setup,
     create_telephony_event, create_mute_request, create_sms_messages,
     create_conversations_request, create_conversation_request,
     create_attachment_request, create_send_sms_request,
