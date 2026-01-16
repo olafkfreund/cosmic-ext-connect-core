@@ -36,6 +36,7 @@ pub use protocol::Packet;
 
 // Re-export modules for convenience
 pub use network::discovery;
+pub use network::transport;
 
 // Re-export FFI types for UniFFI scaffolding
 pub use ffi::{
@@ -75,7 +76,8 @@ uniffi::include_scaffolding!("cosmic_connect_core");
 
 // Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
-pub const PROTOCOL_VERSION: i32 = 7;
+/// Updated to version 8 to match latest KDE Connect Android app
+pub const PROTOCOL_VERSION: i32 = 8;
 
 #[cfg(test)]
 mod tests {
@@ -88,6 +90,6 @@ mod tests {
 
     #[test]
     fn test_protocol_version() {
-        assert_eq!(PROTOCOL_VERSION, 7);
+        assert_eq!(PROTOCOL_VERSION, 8);
     }
 }

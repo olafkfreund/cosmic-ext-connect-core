@@ -20,4 +20,5 @@ pub use packet::Packet;
 // pub use identity::Identity;
 
 /// KDE Connect protocol version implemented by this library
-pub const PROTOCOL_VERSION: i32 = 7;
+/// Updated to version 8 to match latest KDE Connect Android app
+pub const PROTOCOL_VERSION: i32 = 8;
