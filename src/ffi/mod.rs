@@ -1546,6 +1546,65 @@ pub fn create_mousepad_request(body_json: String) -> Result<FfiPacket> {
     Ok(packet.into())
 }
 
+/// Create MOUSEPAD echo packet (acknowledgment reply)
+///
+/// Creates an acknowledgment/echo packet in response to keyboard input
+/// from the desktop. Used by RemoteKeyboard plugin when sendAck is requested.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing key, modifiers, and isAck flag
+///
+/// # Example
+///
+/// ```json
+/// {
+///   "key": "a",
+///   "shift": false,
+///   "ctrl": false,
+///   "alt": false,
+///   "isAck": true
+/// }
+/// ```
+pub fn create_mousepad_echo(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.mousepad.echo", body_data);
+    Ok(packet.into())
+}
+
+/// Create MOUSEPAD keyboard state packet
+///
+/// Creates a packet to notify the desktop of keyboard visibility/active state.
+/// Used by RemoteKeyboard plugin to indicate whether the remote keyboard
+/// input method is currently visible and accepting input.
+///
+/// # Arguments
+///
+/// * `state` - Keyboard active state (true = keyboard visible/active)
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_mousepad_keyboardstate;
+///
+/// // Notify desktop that keyboard is now visible
+/// let packet = create_mousepad_keyboardstate(true)?;
+/// // Send packet to desktop...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_mousepad_keyboardstate(state: bool) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "state": state
+    });
+
+    let packet = Packet::new("cosmicconnect.mousepad.keyboardstate", body);
+    Ok(packet.into())
+}
+
 // ==========================================================================
 // Certificate Management
 // ==========================================================================

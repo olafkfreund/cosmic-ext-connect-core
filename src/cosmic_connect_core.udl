@@ -559,6 +559,28 @@ namespace cosmic_connect_core {
   /// * `body_json` - JSON string containing command and parameters
   [Throws=ProtocolError]
   FfiPacket create_mousepad_request(string body_json);
+
+  // RemoteKeyboard Plugin
+
+  /// Create a MOUSEPAD echo packet
+  ///
+  /// Creates an acknowledgment/echo packet in response to keyboard input.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing key, modifiers, and isAck flag
+  [Throws=ProtocolError]
+  FfiPacket create_mousepad_echo(string body_json);
+
+  /// Create a MOUSEPAD keyboard state packet
+  ///
+  /// Creates a packet to notify the desktop of keyboard visibility state.
+  ///
+  /// # Arguments
+  ///
+  /// * `state` - Keyboard visible/active state (true = active)
+  [Throws=ProtocolError]
+  FfiPacket create_mousepad_keyboardstate(boolean state);
 };
 
 // ==========================================================================
