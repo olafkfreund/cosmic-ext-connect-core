@@ -99,15 +99,15 @@
 //! - [Valent Protocol Documentation](https://valent.andyholmes.ca/documentation/protocol.html)
 //! - [KDE Connect Clipboard Plugin](https://invent.kde.org/network/kdeconnect-kde/tree/master/plugins/clipboard)
 
-use crate::{Device, Packet, Result};
+use crate::error::Result;
+use crate::plugins::Plugin;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use chrono::Utc;
 use serde_json::json;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
-
-use super::{Plugin, PluginFactory};
 
 /// Clipboard state with content and timestamp
 ///
@@ -432,7 +432,7 @@ impl ClipboardPlugin {
     ///
     /// Processes standard clipboard updates (without timestamp).
     /// Always applies the update since standard packets don't include timestamp.
-    async fn handle_clipboard_update(&self, packet: &Packet, device: &Device) {
+    async fn handle_clipboard_update(&self, packet: &Packet) {
         let content = packet
             .body
             .get("content")
@@ -440,20 +440,11 @@ impl ClipboardPlugin {
             .unwrap_or("");
 
         if content.is_empty() {
-            debug!(
-                "Received empty clipboard update from {} ({})",
-                device.name(),
-                device.id()
-            );
+            debug!("Received empty clipboard update");
             return;
         }
 
-        info!(
-            "Received clipboard update from {} ({}): {} chars",
-            device.name(),
-            device.id(),
-            content.len()
-        );
+        info!("Received clipboard update: {} chars", content.len());
 
         // Standard updates always applied (no timestamp validation)
         self.set_content(content.to_string()).await;
@@ -468,7 +459,7 @@ impl ClipboardPlugin {
     ///
     /// Processes clipboard sync on device connection.
     /// Validates timestamp to prevent applying older content.
-    async fn handle_clipboard_connect(&self, packet: &Packet, device: &Device) {
+    async fn handle_clipboard_connect(&self, packet: &Packet) {
         let content = packet
             .body
             .get("content")
@@ -483,11 +474,7 @@ impl ClipboardPlugin {
 
         // Ignore packets with timestamp 0 (no content)
         if timestamp == 0 {
-            debug!(
-                "Ignoring connect packet from {} ({}) with timestamp 0",
-                device.name(),
-                device.id()
-            );
+            debug!("Ignoring connect packet with timestamp 0");
             return;
         }
 
@@ -496,9 +483,7 @@ impl ClipboardPlugin {
         // Only apply if incoming timestamp is newer
         if timestamp > current_state.timestamp {
             info!(
-                "Received clipboard connect from {} ({}): {} chars (timestamp: {})",
-                device.name(),
-                device.id(),
+                "Received clipboard connect: {} chars (timestamp: {})",
                 content.len(),
                 timestamp
             );
@@ -512,9 +497,7 @@ impl ClipboardPlugin {
             );
         } else {
             debug!(
-                "Ignoring connect packet from {} ({}) - timestamp {} <= local {}",
-                device.name(),
-                device.id(),
+                "Ignoring connect packet - timestamp {} <= local {}",
                 timestamp,
                 current_state.timestamp
             );
@@ -534,9 +517,6 @@ impl Plugin for ClipboardPlugin {
         "clipboard"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
@@ -552,9 +532,8 @@ impl Plugin for ClipboardPlugin {
         ]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
-        self.device_id = Some(device.id().to_string());
-        info!("Clipboard plugin initialized for device {}", device.name());
+    async fn initialize(&mut self) -> Result<()> {
+        info!("Clipboard plugin initialized");
         Ok(())
     }
 
@@ -563,7 +542,7 @@ impl Plugin for ClipboardPlugin {
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         let state = self.state.read().await;
         info!(
             "Clipboard plugin stopped - last timestamp: {}",
@@ -572,13 +551,13 @@ impl Plugin for ClipboardPlugin {
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             "kdeconnect.clipboard" => {
-                self.handle_clipboard_update(packet, device).await;
+                self.handle_clipboard_update(packet).await;
             }
             "kdeconnect.clipboard.connect" => {
-                self.handle_clipboard_connect(packet, device).await;
+                self.handle_clipboard_connect(packet).await;
             }
             _ => {}
         }
@@ -588,42 +567,11 @@ impl Plugin for ClipboardPlugin {
 
 /// Factory for creating ClipboardPlugin instances
 #[derive(Debug, Clone, Copy)]
-pub struct ClipboardPluginFactory;
-
-impl PluginFactory for ClipboardPluginFactory {
-    fn name(&self) -> &str {
-        "clipboard"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.clipboard".to_string(),
-            "kdeconnect.clipboard.connect".to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.clipboard".to_string(),
-            "kdeconnect.clipboard.connect".to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(ClipboardPlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeviceInfo, DeviceType};
     use serde_json::json;
-
-    fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Device", DeviceType::Desktop, 1716);
-        Device::from_discovery(info)
-    }
 
     #[test]
     fn test_clipboard_state_creation() {
@@ -681,17 +629,15 @@ mod tests {
     #[tokio::test]
     async fn test_plugin_lifecycle() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
 
         // Initialize
-        plugin.init(&device).await.unwrap();
-        assert!(plugin.device_id.is_some());
+        plugin.initialize().await.unwrap();
 
         // Start
         plugin.start().await.unwrap();
 
         // Stop
-        plugin.stop().await.unwrap();
+        plugin.shutdown().await.unwrap();
     }
 
     #[tokio::test]
@@ -769,16 +715,14 @@ mod tests {
     #[tokio::test]
     async fn test_handle_clipboard_update() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
-        let mut device = create_test_device();
         let packet = Packet::new(
             "kdeconnect.clipboard",
             json!({ "content": "Updated clipboard" }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         let content = plugin.get_content().await;
         assert_eq!(content, "Updated clipboard");
@@ -787,8 +731,7 @@ mod tests {
     #[tokio::test]
     async fn test_handle_clipboard_connect_newer() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
         // Set old content
         plugin
@@ -796,7 +739,6 @@ mod tests {
             .await;
 
         // Receive newer content
-        let mut device = create_test_device();
         let packet = Packet::new(
             "kdeconnect.clipboard.connect",
             json!({
@@ -805,7 +747,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should update
         let state = plugin.get_state().await;
@@ -816,8 +758,7 @@ mod tests {
     #[tokio::test]
     async fn test_handle_clipboard_connect_older() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
         // Set current content
         plugin
@@ -825,7 +766,6 @@ mod tests {
             .await;
 
         // Receive older content
-        let mut device = create_test_device();
         let packet = Packet::new(
             "kdeconnect.clipboard.connect",
             json!({
@@ -834,7 +774,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should NOT update
         let state = plugin.get_state().await;
@@ -845,8 +785,7 @@ mod tests {
     #[tokio::test]
     async fn test_handle_clipboard_connect_zero_timestamp() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
         // Set current content
         plugin
@@ -854,7 +793,6 @@ mod tests {
             .await;
 
         // Receive content with timestamp 0
-        let mut device = create_test_device();
         let packet = Packet::new(
             "kdeconnect.clipboard.connect",
             json!({
@@ -863,7 +801,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should NOT update (timestamp 0 ignored)
         let state = plugin.get_state().await;
@@ -874,17 +812,15 @@ mod tests {
     #[tokio::test]
     async fn test_handle_empty_clipboard() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
         // Set initial content
         plugin.set_content("Initial".to_string()).await;
 
         // Receive empty content
-        let mut device = create_test_device();
         let packet = Packet::new("kdeconnect.clipboard", json!({ "content": "" }));
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should not update with empty content
         let content = plugin.get_content().await;
@@ -894,14 +830,11 @@ mod tests {
     #[tokio::test]
     async fn test_multiple_updates() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
-
-        let mut device = create_test_device();
+        plugin.initialize().await.unwrap();
 
         // First update
         let packet1 = Packet::new("kdeconnect.clipboard", json!({ "content": "First update" }));
-        plugin.handle_packet(&packet1, &mut device).await.unwrap();
+        plugin.handle_packet(&packet1).await.unwrap();
 
         let content = plugin.get_content().await;
         assert_eq!(content, "First update");
@@ -911,7 +844,7 @@ mod tests {
             "kdeconnect.clipboard",
             json!({ "content": "Second update" }),
         );
-        plugin.handle_packet(&packet2, &mut device).await.unwrap();
+        plugin.handle_packet(&packet2).await.unwrap();
 
         let content = plugin.get_content().await;
         assert_eq!(content, "Second update");
@@ -920,15 +853,12 @@ mod tests {
     #[tokio::test]
     async fn test_sync_loop_prevention() {
         let mut plugin = ClipboardPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
 
         // Set current state
         plugin
             .set_content_with_timestamp("Current".to_string(), 2000)
             .await;
-
-        let mut device = create_test_device();
 
         // Try to apply same timestamp (should be ignored)
         let packet = Packet::new(
@@ -939,7 +869,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should not update
         let state = plugin.get_state().await;
