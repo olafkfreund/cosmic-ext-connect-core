@@ -31,13 +31,14 @@
 //! - [KDE Connect Presenter Plugin](https://github.com/KDE/kdeconnect-kde/tree/master/plugins/presenter)
 //! - [Valent Protocol Documentation](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, ProtocolError, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use tracing::{debug, info, warn};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Packet type for presenter events
 pub const PACKET_TYPE_PRESENTER: &str = "kdeconnect.presenter";
@@ -117,9 +118,6 @@ impl Plugin for PresenterPlugin {
         "presenter"
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![PACKET_TYPE_PRESENTER.to_string()]
@@ -130,24 +128,24 @@ impl Plugin for PresenterPlugin {
         vec![]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.device_id = Some(device.id().to_string());
         info!("Presenter plugin initialized for device {}", device.name());
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("Presenter plugin started");
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         info!("Presenter plugin stopped");
         self.presentation_active = false;
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             PACKET_TYPE_PRESENTER => {
                 debug!("Received presenter event");
@@ -163,25 +161,6 @@ impl Plugin for PresenterPlugin {
 
 /// Factory for creating Presenter plugin instances
 #[derive(Debug, Clone, Copy)]
-pub struct PresenterPluginFactory;
-
-impl PluginFactory for PresenterPluginFactory {
-    fn name(&self) -> &str {
-        "presenter"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![PACKET_TYPE_PRESENTER.to_string()]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(PresenterPlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {

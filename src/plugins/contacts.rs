@@ -20,8 +20,9 @@
 //! ## References
 //! - [Valent Protocol](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::plugins::{Plugin, PluginFactory};
-use crate::{Device, Packet, ProtocolError, Result};
+use crate::plugins::Plugin;
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -250,9 +251,6 @@ impl Plugin for ContactsPlugin {
         "contacts"
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
@@ -268,25 +266,20 @@ impl Plugin for ContactsPlugin {
         ]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
-        self.device_id = Some(device.id().to_string());
-        info!("Contacts plugin initialized for device {}", device.name());
-        Ok(())
-    }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("Starting contacts plugin");
         // Automatically request contacts on start
         // TODO: Send request packet via plugin manager
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         info!("Stopping contacts plugin");
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             PACKET_TYPE_RESPONSE_UIDS_TIMESTAMPS => {
                 self.handle_uids_timestamps_response(packet).await
@@ -301,31 +294,6 @@ impl Plugin for ContactsPlugin {
 }
 
 /// Factory for creating contacts plugin instances
-pub struct ContactsPluginFactory;
-
-impl PluginFactory for ContactsPluginFactory {
-    fn name(&self) -> &str {
-        "contacts"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            PACKET_TYPE_RESPONSE_UIDS_TIMESTAMPS.to_string(),
-            PACKET_TYPE_RESPONSE_VCARDS.to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            PACKET_TYPE_REQUEST_ALL_UIDS_TIMESTAMPS.to_string(),
-            PACKET_TYPE_REQUEST_VCARDS_BY_UID.to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(ContactsPlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {

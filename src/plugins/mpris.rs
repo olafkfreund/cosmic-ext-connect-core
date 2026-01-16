@@ -218,7 +218,8 @@
 //! - [Valent Protocol Documentation](https://valent.andyholmes.ca/documentation/protocol.html)
 //! - [MPRIS2 Specification](https://specifications.freedesktop.org/mpris-spec/latest/)
 
-use crate::{Device, Packet, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -227,7 +228,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Loop status for media playback
 ///
@@ -1061,9 +1062,6 @@ impl Plugin for MprisPlugin {
         "mpris"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
@@ -1079,24 +1077,24 @@ impl Plugin for MprisPlugin {
         ]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.device_id = Some(device.id().to_string());
         info!("MPRIS plugin initialized for device {}", device.name());
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("MPRIS plugin started");
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         let player_count = self.players.read().await.len();
         info!("MPRIS plugin stopped - {} players tracked", player_count);
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             "kdeconnect.mpris" => {
                 self.handle_mpris_status(packet, device).await;
@@ -1112,31 +1110,6 @@ impl Plugin for MprisPlugin {
 
 /// Factory for creating MprisPlugin instances
 #[derive(Debug, Clone, Copy)]
-pub struct MprisPluginFactory;
-
-impl PluginFactory for MprisPluginFactory {
-    fn name(&self) -> &str {
-        "mpris"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.mpris".to_string(),
-            "kdeconnect.mpris.request".to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.mpris".to_string(),
-            "kdeconnect.mpris.request".to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(MprisPlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {

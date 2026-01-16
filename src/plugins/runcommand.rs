@@ -103,7 +103,8 @@
 //! - [KDE Connect RunCommand Plugin](https://github.com/KDE/kdeconnect-kde/tree/master/plugins/runcommand)
 //! - [Valent Protocol - RunCommand](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, ProtocolError, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -114,7 +115,7 @@ use tokio::fs;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// A runnable command definition
 ///
@@ -493,9 +494,6 @@ impl Plugin for RunCommandPlugin {
         "runcommand"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec!["kdeconnect.runcommand.request".to_string()]
@@ -505,7 +503,7 @@ impl Plugin for RunCommandPlugin {
         vec!["kdeconnect.runcommand".to_string()]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.device_id = Some(device.id().to_string());
 
         // Set up config path
@@ -521,13 +519,13 @@ impl Plugin for RunCommandPlugin {
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         let command_count = self.get_commands().await.len();
         info!("RunCommand plugin started with {} commands", command_count);
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         let executed = self.commands_executed().await;
         info!(
             "RunCommand plugin stopped - {} commands executed",
@@ -536,7 +534,7 @@ impl Plugin for RunCommandPlugin {
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         if packet.packet_type == "kdeconnect.runcommand.request" {
             if let Some(_response) = self.handle_request(packet).await? {
                 // Response packet would need to be sent via connection manager
@@ -562,25 +560,6 @@ impl Plugin for RunCommandPlugin {
 /// assert_eq!(plugin.name(), "runcommand");
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct RunCommandPluginFactory;
-
-impl PluginFactory for RunCommandPluginFactory {
-    fn name(&self) -> &str {
-        "runcommand"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec!["kdeconnect.runcommand.request".to_string()]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec!["kdeconnect.runcommand".to_string()]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(RunCommandPlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {

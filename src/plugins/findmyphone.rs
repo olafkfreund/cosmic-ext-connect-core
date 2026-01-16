@@ -21,13 +21,14 @@
 //! - [KDE Connect FindMyPhone Plugin](https://github.com/KDE/kdeconnect-android/blob/master/src/org/kde/kdeconnect/Plugins/FindMyPhonePlugin/)
 //! - [Valent Protocol Documentation](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde_json::json;
 use std::any::Any;
 use tracing::{debug, info};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Packet type for find my phone requests
 pub const PACKET_TYPE_FINDMYPHONE_REQUEST: &str = "kdeconnect.findmyphone.request";
@@ -74,9 +75,6 @@ impl Plugin for FindMyPhonePlugin {
         "findmyphone"
     }
 
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         // This plugin only sends requests, doesn't receive
@@ -87,23 +85,23 @@ impl Plugin for FindMyPhonePlugin {
         vec![PACKET_TYPE_FINDMYPHONE_REQUEST.to_string()]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.device_id = Some(device.id().to_string());
         info!("Find My Phone plugin initialized for device {}", device.name());
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("Find My Phone plugin started");
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         info!("Find My Phone plugin stopped");
         Ok(())
     }
 
-    async fn handle_packet(&mut self, _packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, _packet: &Packet) -> Result<()> {
         // This plugin doesn't handle incoming packets
         Ok(())
     }
@@ -111,25 +109,6 @@ impl Plugin for FindMyPhonePlugin {
 
 /// Factory for creating Find My Phone plugin instances
 #[derive(Debug, Clone, Copy)]
-pub struct FindMyPhonePluginFactory;
-
-impl PluginFactory for FindMyPhonePluginFactory {
-    fn name(&self) -> &str {
-        "findmyphone"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![PACKET_TYPE_FINDMYPHONE_REQUEST.to_string()]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(FindMyPhonePlugin::new())
-    }
-}
 
 #[cfg(test)]
 mod tests {

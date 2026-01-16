@@ -112,7 +112,8 @@
 //!
 //! - [Valent Protocol - Notification](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -120,7 +121,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use tracing::{debug, info, warn};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Notification data
 ///
@@ -460,7 +461,9 @@ impl NotificationPlugin {
     }
 
     /// Handle incoming notification
-    fn handle_notification(&self, packet: &Packet, device: &Device) {
+    fn handle_notification(&self, packet: &Packet) {
+        let device_id = self.device_id.as_deref().unwrap_or("unknown");
+
         // Check for cancel
         if let Some(is_cancel) = packet.body.get("isCancel").and_then(|v| v.as_bool()) {
             if is_cancel {
@@ -468,10 +471,9 @@ impl NotificationPlugin {
                     if let Ok(mut notifications) = self.notifications.write() {
                         notifications.remove(id);
                         info!(
-                            "Notification {} cancelled from {} ({})",
+                            "Notification {} cancelled from device ({})",
                             id,
-                            device.name(),
-                            device.id()
+                            device_id
                         );
                     }
                 }
@@ -493,17 +495,15 @@ impl NotificationPlugin {
                 // Log notification
                 if silent {
                     debug!(
-                        "Preexisting notification from {} ({}): {} - {}",
-                        device.name(),
-                        device.id(),
+                        "Preexisting notification from device ({}): {} - {}",
+                        device_id,
                         notification.app_name,
                         notification.title
                     );
                 } else {
                     info!(
-                        "New notification from {} ({}): {} - {} - {}",
-                        device.name(),
-                        device.id(),
+                        "New notification from device ({}): {} - {} - {}",
+                        device_id,
                         notification.app_name,
                         notification.title,
                         notification.text
@@ -522,19 +522,20 @@ impl NotificationPlugin {
                 }
             }
             Err(e) => {
-                warn!("Failed to parse notification from {}: {}", device.name(), e);
+                warn!("Failed to parse notification from device ({}): {}", device_id, e);
             }
         }
     }
 
     /// Handle notification request
-    fn handle_request(&self, packet: &Packet, device: &Device) {
+    fn handle_request(&self, packet: &Packet) {
+        let device_id = self.device_id.as_deref().unwrap_or("unknown");
+
         // Check for request all
         if let Some(true) = packet.body.get("request").and_then(|v| v.as_bool()) {
             info!(
-                "Received request for all notifications from {} ({})",
-                device.name(),
-                device.id()
+                "Received request for all notifications from device ({})",
+                device_id
             );
             // Future: Send all our local notifications to device
             // Requires: Integration with COSMIC notification system to enumerate active notifications
@@ -544,10 +545,9 @@ impl NotificationPlugin {
         // Check for cancel/dismiss
         if let Some(cancel_id) = packet.body.get("cancel").and_then(|v| v.as_str()) {
             info!(
-                "Received dismiss request for {} from {} ({})",
+                "Received dismiss request for {} from device ({})",
                 cancel_id,
-                device.name(),
-                device.id()
+                device_id
             );
             // Future: Dismiss our local notification
             // Requires: Track notification IDs and call CosmicNotifier.close(id)
@@ -555,17 +555,17 @@ impl NotificationPlugin {
     }
 
     /// Handle notification action
-    fn handle_action(&self, packet: &Packet, device: &Device) {
+    fn handle_action(&self, packet: &Packet) {
+        let device_id = self.device_id.as_deref().unwrap_or("unknown");
         let key = packet.body.get("key").and_then(|v| v.as_str());
         let action = packet.body.get("action").and_then(|v| v.as_str());
 
         if let (Some(key), Some(action)) = (key, action) {
             info!(
-                "Received action '{}' for notification {} from {} ({})",
+                "Received action '{}' for notification {} from device ({})",
                 action,
                 key,
-                device.name(),
-                device.id()
+                device_id
             );
             // Future: Trigger the notification action button
             // Requires: Store action callbacks and execute on action packet
@@ -573,17 +573,17 @@ impl NotificationPlugin {
     }
 
     /// Handle notification reply
-    fn handle_reply(&self, packet: &Packet, device: &Device) {
+    fn handle_reply(&self, packet: &Packet) {
+        let device_id = self.device_id.as_deref().unwrap_or("unknown");
         let reply_id = packet.body.get("requestReplyId").and_then(|v| v.as_str());
         let message = packet.body.get("message").and_then(|v| v.as_str());
 
         if let (Some(reply_id), Some(message)) = (reply_id, message) {
             info!(
-                "Received reply '{}' for {} from {} ({})",
+                "Received reply '{}' for {} from device ({})",
                 message,
                 reply_id,
-                device.name(),
-                device.id()
+                device_id
             );
             // Future: Send inline reply to originating app
             // Requires: Platform-specific integration with messaging apps
@@ -603,9 +603,6 @@ impl Plugin for NotificationPlugin {
         "notification"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
-    }
 
     fn incoming_capabilities(&self) -> Vec<String> {
         vec![
@@ -625,21 +622,13 @@ impl Plugin for NotificationPlugin {
         ]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
-        self.device_id = Some(device.id().to_string());
-        info!(
-            "Notification plugin initialized for device {}",
-            device.name()
-        );
-        Ok(())
-    }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("Notification plugin started");
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         let count = self.notification_count();
         info!(
             "Notification plugin stopped ({} active notifications)",
@@ -648,19 +637,19 @@ impl Plugin for NotificationPlugin {
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             "kdeconnect.notification" => {
-                self.handle_notification(packet, device);
+                self.handle_notification(packet);
             }
             "kdeconnect.notification.request" => {
-                self.handle_request(packet, device);
+                self.handle_request(packet);
             }
             "kdeconnect.notification.action" => {
-                self.handle_action(packet, device);
+                self.handle_action(packet);
             }
             "kdeconnect.notification.reply" => {
-                self.handle_reply(packet, device);
+                self.handle_reply(packet);
             }
             _ => {
                 // Ignore other packet types
@@ -670,47 +659,9 @@ impl Plugin for NotificationPlugin {
     }
 }
 
-/// Factory for creating NotificationPlugin instances
-#[derive(Debug, Clone, Copy)]
-pub struct NotificationPluginFactory;
-
-impl PluginFactory for NotificationPluginFactory {
-    fn name(&self) -> &str {
-        "notification"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.notification".to_string(),
-            "kdeconnect.notification.request".to_string(),
-            "kdeconnect.notification.action".to_string(),
-            "kdeconnect.notification.reply".to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            "kdeconnect.notification".to_string(),
-            "kdeconnect.notification.request".to_string(),
-            "kdeconnect.notification.action".to_string(),
-            "kdeconnect.notification.reply".to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(NotificationPlugin::new())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DeviceInfo, DeviceType};
-
-    fn create_test_device() -> Device {
-        let info = DeviceInfo::new("Test Phone", DeviceType::Phone, 1716);
-        Device::from_discovery(info)
-    }
 
     #[test]
     fn test_notification_new() {
@@ -780,13 +731,13 @@ mod tests {
     #[tokio::test]
     async fn test_plugin_lifecycle() {
         let mut plugin = NotificationPlugin::new();
-        let device = create_test_device();
 
-        plugin.init(&device).await.unwrap();
+        // Set device ID manually for testing
+        plugin.device_id = Some("test-device-id".to_string());
         assert!(plugin.device_id.is_some());
 
-        plugin.start().await.unwrap();
-        plugin.stop().await.unwrap();
+        plugin.initialize().await.unwrap();
+        plugin.shutdown().await.unwrap();
     }
 
     #[test]
@@ -842,14 +793,12 @@ mod tests {
     #[tokio::test]
     async fn test_handle_notification() {
         let mut plugin = NotificationPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.device_id = Some("test-device-id".to_string());
 
-        let mut device = create_test_device();
         let notif = Notification::new("123", "Messages", "New Message", "Hello!", true);
         let packet = plugin.create_notification_packet(&notif);
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.notification_count(), 1);
         let stored = plugin.get_notification("123").unwrap();
@@ -859,21 +808,18 @@ mod tests {
     #[tokio::test]
     async fn test_handle_cancel_notification() {
         let mut plugin = NotificationPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
-
-        let mut device = create_test_device();
+        plugin.device_id = Some("test-device-id".to_string());
 
         // Add notification
         let notif = Notification::new("123", "Messages", "Title", "Text", true);
         let packet = plugin.create_notification_packet(&notif);
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
         assert_eq!(plugin.notification_count(), 1);
 
         // Cancel it
         let cancel_packet = plugin.create_cancel_packet("123");
         plugin
-            .handle_packet(&cancel_packet, &mut device)
+            .handle_packet(&cancel_packet)
             .await
             .unwrap();
         assert_eq!(plugin.notification_count(), 0);
@@ -882,10 +828,7 @@ mod tests {
     #[tokio::test]
     async fn test_get_all_notifications() {
         let mut plugin = NotificationPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
-
-        let mut device = create_test_device();
+        plugin.device_id = Some("test-device-id".to_string());
 
         // Add multiple notifications
         for i in 1..=3 {
@@ -897,7 +840,7 @@ mod tests {
                 true,
             );
             let packet = plugin.create_notification_packet(&notif);
-            plugin.handle_packet(&packet, &mut device).await.unwrap();
+            plugin.handle_packet(&packet).await.unwrap();
         }
 
         let all = plugin.get_all_notifications();
@@ -907,13 +850,11 @@ mod tests {
     #[tokio::test]
     async fn test_ignore_non_notification_packets() {
         let mut plugin = NotificationPlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.device_id = Some("test-device-id".to_string());
 
-        let mut device = create_test_device();
         let packet = Packet::new("kdeconnect.ping", json!({}));
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.notification_count(), 0);
     }

@@ -121,22 +121,22 @@ pub mod ping;          // ✅ Ping plugin
 pub mod battery;       // ✅ Battery status monitoring
 
 // Communication plugins
-pub mod notification;  // ✅ Notification forwarding
-pub mod telephony;     // ✅ Call/SMS notifications
-pub mod contacts;      // ✅ Contact sync
+pub mod notification;   // ✅ Device architecture refactored for FFI
+// pub mod telephony;    // ⚠️  TODO: Requires Device architecture refactoring for FFI
+// pub mod contacts;     // ⚠️  TODO: Requires Device architecture refactoring for FFI
 
 // Content sharing plugins
-pub mod clipboard;     // ✅ Clipboard sync
-pub mod share;         // ✅ File/text/URL sharing
+// pub mod clipboard;     // ⚠️  TODO: Requires Device architecture refactoring for FFI
+pub mod share;            // ✅  Phase 1 complete: Device dependencies removed (Issue #53)
 
 // Remote control plugins
-pub mod remoteinput;   // ✅ Mouse/keyboard control
-pub mod mpris;         // ✅ Media player control
-pub mod runcommand;    // ✅ Remote command execution
-pub mod presenter;     // ✅ Presentation control
+// pub mod remoteinput;   // ⚠️  TODO: Requires mouse_keyboard_input crate (Linux-only)
+// pub mod mpris;         // ⚠️  TODO: Requires Device architecture refactoring for FFI
+// pub mod runcommand;    // ⚠️  TODO: Requires Device architecture refactoring for FFI
+// pub mod presenter;     // ⚠️  TODO: Requires Device architecture refactoring for FFI
 
 // Utility plugins
-pub mod findmyphone;   // ✅ Find my phone
+// pub mod findmyphone;   // ⚠️  TODO: Requires Device architecture refactoring for FFI
 
 // Re-exports for convenience
 pub use r#trait::{Plugin, PluginMetadata};

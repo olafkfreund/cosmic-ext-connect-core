@@ -19,15 +19,16 @@
 //! - [KDE Connect MousePad Plugin](https://github.com/KDE/kdeconnect-kde/tree/master/plugins/mousepad)
 //! - [Valent Protocol - MousePad](https://valent.andyholmes.ca/documentation/protocol.html)
 
-use crate::{Device, Packet, ProtocolError, Result};
+use crate::error::Result;
+use crate::protocol::Packet;
 use async_trait::async_trait;
-use mouse_keyboard_input::VirtualDevice;
+// use mouse_keyboard_input::VirtualDevice; // Not available on Android
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 use std::sync::{Arc, Mutex};
 use tracing::{debug, error, info, warn};
 
-use super::{Plugin, PluginFactory};
+use crate::plugins::Plugin;
 
 /// Packet type for remote input requests
 pub const PACKET_TYPE_MOUSEPAD_REQUEST: &str = "kdeconnect.mousepad.request";
@@ -201,7 +202,7 @@ impl RemoteInputPlugin {
         }
 
         // Handle mouse clicks
-        use mouse_keyboard_input::{BTN_LEFT, BTN_MIDDLE, BTN_RIGHT};
+        // use mouse_keyboard_input::{BTN_LEFT, BTN_MIDDLE, BTN_RIGHT}; // Not available on Android
 
         let mut device_guard = device.lock().unwrap();
         if let Some(dev) = device_guard.as_mut() {
@@ -275,7 +276,7 @@ impl RemoteInputPlugin {
 
     /// Convert character to Linux key code
     fn char_to_keycode(ch: char) -> Option<u16> {
-        use mouse_keyboard_input::*;
+        // use mouse_keyboard_input::*; // Not available on Android
         match ch {
             'a' | 'A' => Some(KEY_A),
             'b' | 'B' => Some(KEY_B),
@@ -333,7 +334,7 @@ impl RemoteInputPlugin {
 
     /// Convert special key code to Linux key code
     fn special_key_to_keycode(special: i32) -> Option<u16> {
-        use mouse_keyboard_input::*;
+        // use mouse_keyboard_input::*; // Not available on Android
         match special {
             1 => Some(KEY_BACKSPACE),    // Backspace
             2 => Some(KEY_TAB),           // Tab
@@ -389,23 +390,23 @@ impl Plugin for RemoteInputPlugin {
         vec![PACKET_TYPE_MOUSEPAD_KEYBOARDSTATE.to_string()]
     }
 
-    async fn init(&mut self, device: &Device) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         self.device_id = Some(device.id().to_string());
         info!("Remote Input plugin initialized for device {}", device.name());
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
+    async fn initialize(&mut self) -> Result<()> {
         info!("Remote Input plugin started");
         Ok(())
     }
 
-    async fn stop(&mut self) -> Result<()> {
+    async fn shutdown(&mut self) -> Result<()> {
         info!("Remote Input plugin stopped");
         Ok(())
     }
 
-    async fn handle_packet(&mut self, packet: &Packet, _device: &mut Device) -> Result<()> {
+    async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
         match packet.packet_type.as_str() {
             PACKET_TYPE_MOUSEPAD_REQUEST => {
                 debug!("Received remote input request");
