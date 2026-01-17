@@ -603,6 +603,18 @@ namespace cosmic_connect_core {
   /// * `body_json` - JSON string containing tool event data
   [Throws=ProtocolError]
   FfiPacket create_digitizer_event(string body_json);
+
+  // SFTP Plugin
+
+  /// Create an SFTP packet
+  ///
+  /// Creates a packet for SFTP server connection details or error messages.
+  ///
+  /// # Arguments
+  ///
+  /// * `body_json` - JSON string containing SFTP server info or error message
+  [Throws=ProtocolError]
+  FfiPacket create_sftp_packet(string body_json);
 };
 
 // ==========================================================================

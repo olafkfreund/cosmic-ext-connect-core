@@ -68,6 +68,7 @@ pub use ffi::{
     create_mpris_request,
     create_mousepad_request, create_mousepad_echo, create_mousepad_keyboardstate,
     create_digitizer_session, create_digitizer_event,
+    create_sftp_packet,
 };
 
 // Public modules

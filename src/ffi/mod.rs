@@ -1675,6 +1675,46 @@ pub fn create_digitizer_event(body_json: String) -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// SFTP Plugin
+// ==========================================================================
+
+/// Create SFTP packet
+///
+/// Creates a packet for SFTP server connection details or error messages.
+/// Used to provide file system access to the desktop over SSH File Transfer Protocol.
+///
+/// # Arguments
+///
+/// * `body_json` - JSON string containing SFTP server info or error message
+///
+/// # Example
+///
+/// ```json
+/// // Server connection info
+/// {
+///   "ip": "192.168.1.100",
+///   "port": 1739,
+///   "user": "sftpuser",
+///   "password": "secret123",
+///   "path": "/storage/emulated/0",
+///   "multiPaths": ["/storage/emulated/0", "/storage/sdcard1"],
+///   "pathNames": ["Internal Storage", "SD Card"]
+/// }
+///
+/// // Error message
+/// {
+///   "errorMessage": "Permission denied"
+/// }
+/// ```
+pub fn create_sftp_packet(body_json: String) -> Result<FfiPacket> {
+    // Parse the request body JSON
+    let body_data: serde_json::Value = serde_json::from_str(&body_json)?;
+
+    let packet = Packet::new("cosmicconnect.sftp", body_data);
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 
