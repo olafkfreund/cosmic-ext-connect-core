@@ -8,11 +8,11 @@
 //!
 //! ## Architecture
 //!
-//! ```
+//! ```text
 //! Platform (Kotlin/Swift)
-//!         ↓
+//!         |
 //!     FFI Layer (this module)
-//!         ↓
+//!         |
 //!    Rust Core (protocol, crypto, plugins, etc.)
 //! ```
 //!
@@ -2152,7 +2152,7 @@ mod tests {
     #[test]
     fn test_get_protocol_version() {
         let version = get_protocol_version();
-        assert_eq!(version, 7);
+        assert_eq!(version, 8);  // Protocol version 8 (KDE Connect compatible)
     }
 
     #[test]

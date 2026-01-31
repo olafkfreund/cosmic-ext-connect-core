@@ -25,7 +25,7 @@
 //! // manager.register_plugin(Box::new(PingPlugin::new())).await?;
 //!
 //! // Get capabilities for identity packet
-//! let (incoming, outgoing) = manager.get_capabilities();
+//! let (incoming, outgoing) = manager.get_capabilities().await;
 //!
 //! // Route incoming packet
 //! let packet = Packet::new("cconnect.ping", json!({}));

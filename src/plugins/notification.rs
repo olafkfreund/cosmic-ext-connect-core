@@ -306,7 +306,7 @@ impl Notification {
 ///
 /// ```rust
 /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
-/// use cosmic_connect_core::Plugin;
+/// use cosmic_connect_core::plugins::Plugin;
 ///
 /// let plugin = NotificationPlugin::new();
 /// assert_eq!(plugin.name(), "notification");

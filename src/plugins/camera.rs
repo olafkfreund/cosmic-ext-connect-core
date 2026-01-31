@@ -610,6 +610,366 @@ impl Plugin for CameraPlugin {
 }
 
 // ============================================================================
+// Frame Receiver (Desktop-side frame processing)
+// ============================================================================
+
+/// Stream statistics for monitoring
+#[derive(Debug, Clone, Default)]
+pub struct StreamStats {
+    /// Total frames received
+    pub frames_received: u64,
+    /// Total frames decoded
+    pub frames_decoded: u64,
+    /// Total frames written to V4L2
+    pub frames_written: u64,
+    /// Total bytes received
+    pub bytes_received: u64,
+    /// Decode errors
+    pub decode_errors: u64,
+    /// Write errors
+    pub write_errors: u64,
+    /// Frames dropped (queue full)
+    pub frames_dropped: u64,
+    /// Last frame timestamp
+    pub last_timestamp_us: u64,
+    /// Start time (Unix timestamp ms)
+    pub start_time_ms: u64,
+}
+
+impl StreamStats {
+    /// Create new stats with current time
+    pub fn new() -> Self {
+        Self {
+            start_time_ms: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis() as u64)
+                .unwrap_or(0),
+            ..Default::default()
+        }
+    }
+
+    /// Calculate average FPS
+    pub fn fps(&self) -> f64 {
+        let elapsed_secs = self.elapsed_secs();
+        if elapsed_secs > 0.0 {
+            self.frames_decoded as f64 / elapsed_secs
+        } else {
+            0.0
+        }
+    }
+
+    /// Calculate average bitrate in kbps
+    pub fn bitrate_kbps(&self) -> f64 {
+        let elapsed_secs = self.elapsed_secs();
+        if elapsed_secs > 0.0 {
+            (self.bytes_received as f64 * 8.0) / (elapsed_secs * 1000.0)
+        } else {
+            0.0
+        }
+    }
+
+    /// Get elapsed time in seconds
+    pub fn elapsed_secs(&self) -> f64 {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+        (now.saturating_sub(self.start_time_ms)) as f64 / 1000.0
+    }
+
+    /// Get frame drop rate (0.0 - 1.0)
+    pub fn drop_rate(&self) -> f64 {
+        let total = self.frames_received + self.frames_dropped;
+        if total > 0 {
+            self.frames_dropped as f64 / total as f64
+        } else {
+            0.0
+        }
+    }
+}
+
+/// Encoded frame ready for decoding
+#[derive(Debug, Clone)]
+pub struct EncodedFrame {
+    /// Frame type (SPS/PPS, I-frame, P-frame)
+    pub frame_type: FrameType,
+    /// Presentation timestamp in microseconds
+    pub timestamp_us: u64,
+    /// Sequence number
+    pub sequence_number: u64,
+    /// Raw H.264 NAL unit data
+    pub data: Vec<u8>,
+}
+
+impl EncodedFrame {
+    /// Create from CameraFrame header and payload data
+    pub fn from_frame_and_payload(frame: &CameraFrame, data: Vec<u8>) -> Self {
+        Self {
+            frame_type: frame.frame_type,
+            timestamp_us: frame.timestamp_us,
+            sequence_number: frame.sequence_number,
+            data,
+        }
+    }
+}
+
+/// Frame receiver callback interface
+///
+/// Implement this trait to receive decoded frames and status updates.
+pub trait FrameReceiverCallback: Send + Sync {
+    /// Called when a frame is successfully decoded and written
+    fn on_frame_written(&self, timestamp_us: u64);
+
+    /// Called when statistics are updated
+    fn on_stats_update(&self, stats: &StreamStats);
+
+    /// Called when an error occurs
+    fn on_error(&self, error: &str);
+
+    /// Called when the stream starts
+    fn on_stream_started(&self);
+
+    /// Called when the stream stops
+    fn on_stream_stopped(&self);
+}
+
+/// Frame receiver for processing camera frames from Android
+///
+/// Receives encoded H.264 frames, decodes them, and writes to V4L2 device.
+/// This is the desktop-side counterpart to Android's CameraStreamClient.
+///
+/// ## Usage
+///
+/// ```rust,ignore
+/// use cosmic_connect_core::plugins::camera::{FrameReceiver, FrameReceiverConfig};
+///
+/// let config = FrameReceiverConfig::default();
+/// let receiver = FrameReceiver::new(config, callback);
+///
+/// // Start receiving frames
+/// receiver.start().await?;
+///
+/// // Queue frames as they arrive from network
+/// receiver.queue_frame(encoded_frame).await?;
+///
+/// // Stop when done
+/// receiver.stop().await?;
+/// ```
+#[cfg(feature = "video")]
+pub struct FrameReceiver {
+    /// Configuration
+    config: FrameReceiverConfig,
+    /// Camera daemon for V4L2 output
+    daemon: crate::video::camera_daemon::CameraDaemon,
+    /// Statistics
+    stats: std::sync::Arc<std::sync::RwLock<StreamStats>>,
+    /// Whether receiver is running
+    running: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    /// Callback for events
+    callback: Option<Box<dyn FrameReceiverCallback>>,
+}
+
+/// Configuration for frame receiver
+#[cfg(feature = "video")]
+#[derive(Debug, Clone)]
+pub struct FrameReceiverConfig {
+    /// V4L2 device path
+    pub device_path: std::path::PathBuf,
+    /// Video width
+    pub width: u32,
+    /// Video height
+    pub height: u32,
+    /// Target FPS (for statistics)
+    pub fps: u32,
+    /// Stats update interval in frames
+    pub stats_interval: u64,
+}
+
+#[cfg(feature = "video")]
+impl Default for FrameReceiverConfig {
+    fn default() -> Self {
+        Self {
+            device_path: std::path::PathBuf::from("/dev/video10"),
+            width: 1280,
+            height: 720,
+            fps: 30,
+            stats_interval: 30,
+        }
+    }
+}
+
+#[cfg(feature = "video")]
+impl FrameReceiver {
+    /// Create a new frame receiver
+    pub fn new(config: FrameReceiverConfig, callback: Option<Box<dyn FrameReceiverCallback>>) -> Self {
+        use crate::video::camera_daemon::{CameraDaemon, CameraDaemonConfig};
+        use crate::video::frame::PixelFormat;
+
+        let daemon_config = CameraDaemonConfig {
+            device_path: config.device_path.clone(),
+            width: config.width,
+            height: config.height,
+            fps: config.fps,
+            output_format: PixelFormat::YUYV,
+        };
+
+        Self {
+            config,
+            daemon: CameraDaemon::new(daemon_config),
+            stats: std::sync::Arc::new(std::sync::RwLock::new(StreamStats::new())),
+            running: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            callback,
+        }
+    }
+
+    /// Check if receiver is running
+    pub fn is_running(&self) -> bool {
+        self.running.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    /// Get current statistics
+    pub fn stats(&self) -> StreamStats {
+        self.stats.read().unwrap().clone()
+    }
+
+    /// Start the frame receiver
+    pub async fn start(&mut self) -> crate::error::Result<()> {
+        if self.is_running() {
+            return Err(crate::error::ProtocolError::Other(
+                "Frame receiver already running".to_string(),
+            ));
+        }
+
+        info!("Starting frame receiver: {}x{} @ {}fps",
+            self.config.width, self.config.height, self.config.fps);
+
+        // Start the daemon
+        self.daemon.start().await.map_err(|e| {
+            crate::error::ProtocolError::Other(format!("Failed to start daemon: {}", e))
+        })?;
+
+        self.running.store(true, std::sync::atomic::Ordering::Relaxed);
+
+        // Reset stats
+        *self.stats.write().unwrap() = StreamStats::new();
+
+        if let Some(ref cb) = self.callback {
+            cb.on_stream_started();
+        }
+
+        Ok(())
+    }
+
+    /// Stop the frame receiver
+    pub async fn stop(&mut self) -> crate::error::Result<()> {
+        if !self.is_running() {
+            return Ok(());
+        }
+
+        info!("Stopping frame receiver");
+
+        self.running.store(false, std::sync::atomic::Ordering::Relaxed);
+
+        // Stop the daemon
+        self.daemon.stop().await.map_err(|e| {
+            crate::error::ProtocolError::Other(format!("Failed to stop daemon: {}", e))
+        })?;
+
+        // Log final stats
+        let stats = self.stats();
+        info!(
+            "Frame receiver stopped: {} frames, {:.1} fps, {:.1} kbps, {:.1}% dropped",
+            stats.frames_decoded,
+            stats.fps(),
+            stats.bitrate_kbps(),
+            stats.drop_rate() * 100.0
+        );
+
+        if let Some(ref cb) = self.callback {
+            cb.on_stream_stopped();
+        }
+
+        Ok(())
+    }
+
+    /// Queue an encoded frame for processing
+    pub async fn queue_frame(&self, frame: EncodedFrame) -> crate::error::Result<()> {
+        if !self.is_running() {
+            return Err(crate::error::ProtocolError::Other(
+                "Frame receiver not running".to_string(),
+            ));
+        }
+
+        // Update stats
+        {
+            let mut stats = self.stats.write().unwrap();
+            stats.frames_received += 1;
+            stats.bytes_received += frame.data.len() as u64;
+            stats.last_timestamp_us = frame.timestamp_us;
+        }
+
+        // Send to daemon for processing
+        self.daemon
+            .process_frame(frame.data, frame.frame_type, frame.timestamp_us)
+            .await
+            .map_err(|e| {
+                // Update error stats
+                {
+                    let mut stats = self.stats.write().unwrap();
+                    stats.decode_errors += 1;
+                }
+                crate::error::ProtocolError::Other(format!("Failed to process frame: {}", e))
+            })?;
+
+        // Update decoded count
+        {
+            let mut stats = self.stats.write().unwrap();
+            stats.frames_decoded += 1;
+            stats.frames_written += 1;
+
+            // Periodic stats callback
+            if stats.frames_decoded % self.config.stats_interval == 0 {
+                if let Some(ref cb) = self.callback {
+                    cb.on_stats_update(&stats);
+                }
+            }
+        }
+
+        if let Some(ref cb) = self.callback {
+            cb.on_frame_written(frame.timestamp_us);
+        }
+
+        Ok(())
+    }
+
+    /// Queue SPS/PPS configuration data
+    pub async fn queue_sps_pps(&self, data: Vec<u8>) -> crate::error::Result<()> {
+        let frame = EncodedFrame {
+            frame_type: FrameType::SpsPps,
+            timestamp_us: 0,
+            sequence_number: 0,
+            data,
+        };
+        self.queue_frame(frame).await
+    }
+
+    /// Create from camera capability negotiation
+    pub fn from_capability(
+        capability: &CameraCapability,
+        settings: &CameraStart,
+        callback: Option<Box<dyn FrameReceiverCallback>>,
+    ) -> Self {
+        let config = FrameReceiverConfig {
+            width: settings.resolution.width,
+            height: settings.resolution.height,
+            fps: settings.fps,
+            ..Default::default()
+        };
+        Self::new(config, callback)
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -822,5 +1182,56 @@ mod tests {
             plugin.streaming_status().unwrap().status,
             StreamingStatus::Streaming
         );
+    }
+
+    #[test]
+    fn test_stream_stats_new() {
+        let stats = StreamStats::new();
+        assert_eq!(stats.frames_received, 0);
+        assert_eq!(stats.frames_decoded, 0);
+        assert!(stats.start_time_ms > 0);
+    }
+
+    #[test]
+    fn test_stream_stats_fps() {
+        let mut stats = StreamStats::new();
+        stats.frames_decoded = 30;
+        // Simulate 1 second elapsed by adjusting start time
+        stats.start_time_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0)
+            - 1000;
+
+        let fps = stats.fps();
+        assert!(fps > 25.0 && fps < 35.0); // Allow some variance
+    }
+
+    #[test]
+    fn test_stream_stats_drop_rate() {
+        let mut stats = StreamStats::new();
+        stats.frames_received = 90;
+        stats.frames_dropped = 10;
+
+        let drop_rate = stats.drop_rate();
+        assert!((drop_rate - 0.1).abs() < 0.01); // 10% drop rate
+    }
+
+    #[test]
+    fn test_encoded_frame_from_camera_frame() {
+        let camera_frame = CameraFrame {
+            frame_type: FrameType::IFrame,
+            timestamp_us: 1234567890,
+            sequence_number: 42,
+            size: 1024,
+        };
+
+        let payload = vec![0u8; 1024];
+        let encoded = EncodedFrame::from_frame_and_payload(&camera_frame, payload.clone());
+
+        assert_eq!(encoded.frame_type, FrameType::IFrame);
+        assert_eq!(encoded.timestamp_us, 1234567890);
+        assert_eq!(encoded.sequence_number, 42);
+        assert_eq!(encoded.data.len(), 1024);
     }
 }

@@ -261,7 +261,7 @@ pub struct ShareRecord {
 ///
 /// ```rust
 /// use cosmic_connect_core::plugins::share::SharePlugin;
-/// use cosmic_connect_core::Plugin;
+/// use cosmic_connect_core::plugins::Plugin;
 ///
 /// let plugin = SharePlugin::new();
 /// assert_eq!(plugin.name(), "share");
