@@ -186,25 +186,47 @@ impl VideoFrame {
     }
 
     /// Convert I420 to YUYV
+    ///
+    /// Optimized for performance (Issue #110):
+    /// - Uses direct indexing with bounds checking eliminated
+    /// - Processes two pixels per iteration
+    /// - Cache-friendly memory access pattern
     fn i420_to_yuyv(&self) -> VideoFrame {
         let y_plane = self.y_plane().unwrap();
         let u_plane = self.u_plane().unwrap();
         let v_plane = self.v_plane().unwrap();
 
-        let mut yuyv_data = vec![0u8; (self.width * self.height * 2) as usize];
         let width = self.width as usize;
         let height = self.height as usize;
+        let yuyv_size = width * height * 2;
 
-        for y in 0..height {
-            for x in 0..(width / 2) {
-                let y_idx = y * width + x * 2;
-                let uv_idx = (y / 2) * (width / 2) + x;
-                let yuyv_idx = y * width * 2 + x * 4;
+        // Pre-allocate with exact size
+        let mut yuyv_data = Vec::with_capacity(yuyv_size);
+        unsafe { yuyv_data.set_len(yuyv_size); }
 
-                yuyv_data[yuyv_idx] = y_plane[y_idx];         // Y0
-                yuyv_data[yuyv_idx + 1] = u_plane[uv_idx];    // U
-                yuyv_data[yuyv_idx + 2] = y_plane[y_idx + 1]; // Y1
-                yuyv_data[yuyv_idx + 3] = v_plane[uv_idx];    // V
+        // Process row by row for cache efficiency
+        let y_stride = width;
+        let uv_stride = width / 2;
+        let yuyv_stride = width * 2;
+
+        for row in 0..height {
+            let y_row_start = row * y_stride;
+            let uv_row_start = (row / 2) * uv_stride;
+            let yuyv_row_start = row * yuyv_stride;
+
+            // Process pairs of pixels
+            for col_pair in 0..(width / 2) {
+                let y_idx = y_row_start + col_pair * 2;
+                let uv_idx = uv_row_start + col_pair;
+                let yuyv_idx = yuyv_row_start + col_pair * 4;
+
+                // YUYV format: Y0 U Y1 V
+                unsafe {
+                    *yuyv_data.get_unchecked_mut(yuyv_idx) = *y_plane.get_unchecked(y_idx);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 1) = *u_plane.get_unchecked(uv_idx);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 2) = *y_plane.get_unchecked(y_idx + 1);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 3) = *v_plane.get_unchecked(uv_idx);
+                }
             }
         }
 
@@ -218,24 +240,47 @@ impl VideoFrame {
     }
 
     /// Convert NV12 to YUYV
+    ///
+    /// Optimized for performance (Issue #110):
+    /// - Uses direct indexing with bounds checking eliminated
+    /// - Processes two pixels per iteration
+    /// - Cache-friendly memory access pattern
     fn nv12_to_yuyv(&self) -> VideoFrame {
         let y_plane = self.y_plane().unwrap();
         let uv_plane = self.uv_plane().unwrap();
 
-        let mut yuyv_data = vec![0u8; (self.width * self.height * 2) as usize];
         let width = self.width as usize;
         let height = self.height as usize;
+        let yuyv_size = width * height * 2;
 
-        for y in 0..height {
-            for x in 0..(width / 2) {
-                let y_idx = y * width + x * 2;
-                let uv_idx = (y / 2) * width + x * 2;
-                let yuyv_idx = y * width * 2 + x * 4;
+        // Pre-allocate with exact size
+        let mut yuyv_data = Vec::with_capacity(yuyv_size);
+        unsafe { yuyv_data.set_len(yuyv_size); }
 
-                yuyv_data[yuyv_idx] = y_plane[y_idx];         // Y0
-                yuyv_data[yuyv_idx + 1] = uv_plane[uv_idx];   // U
-                yuyv_data[yuyv_idx + 2] = y_plane[y_idx + 1]; // Y1
-                yuyv_data[yuyv_idx + 3] = uv_plane[uv_idx + 1]; // V
+        // Process row by row for cache efficiency
+        let y_stride = width;
+        let uv_stride = width; // NV12 UV plane has same width as Y
+        let yuyv_stride = width * 2;
+
+        for row in 0..height {
+            let y_row_start = row * y_stride;
+            let uv_row_start = (row / 2) * uv_stride;
+            let yuyv_row_start = row * yuyv_stride;
+
+            // Process pairs of pixels
+            for col_pair in 0..(width / 2) {
+                let y_idx = y_row_start + col_pair * 2;
+                let uv_idx = uv_row_start + col_pair * 2;
+                let yuyv_idx = yuyv_row_start + col_pair * 4;
+
+                // YUYV format: Y0 U Y1 V
+                // NV12 UV plane is interleaved: U V U V ...
+                unsafe {
+                    *yuyv_data.get_unchecked_mut(yuyv_idx) = *y_plane.get_unchecked(y_idx);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 1) = *uv_plane.get_unchecked(uv_idx);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 2) = *y_plane.get_unchecked(y_idx + 1);
+                    *yuyv_data.get_unchecked_mut(yuyv_idx + 3) = *uv_plane.get_unchecked(uv_idx + 1);
+                }
             }
         }
 

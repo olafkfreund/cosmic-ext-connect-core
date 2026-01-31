@@ -57,8 +57,10 @@ mod frame;
 mod h264_decoder;
 mod v4l2_device;
 mod camera_daemon;
+mod performance;
 
 pub use frame::{VideoFrame, PixelFormat};
 pub use h264_decoder::{H264Decoder, DecoderError};
 pub use v4l2_device::{V4l2LoopbackDevice, V4l2Error};
 pub use camera_daemon::{CameraDaemon, CameraDaemonConfig, DaemonError};
+pub use performance::{PerformanceMonitor, PerformanceMetrics, PerformanceStatus};
