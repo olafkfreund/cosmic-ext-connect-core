@@ -72,6 +72,7 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 # Video/V4L2 support (Linux only, feature-gated)
 v4l = { version = "0.14", optional = true }  # V4L2 device access
 openh264 = { version = "0.6", optional = true }  # H.264 decoding
+url = "2.5.8"
 
 [dev-dependencies]
 tokio-test = "0.4"

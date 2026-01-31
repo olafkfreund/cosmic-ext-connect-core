@@ -132,6 +132,9 @@ pub mod share;            // ✅  Phase 1 complete: Device dependencies removed 
 // Streaming plugins
 pub mod camera;           // ✅  Camera webcam streaming (Issue #99-#100)
 
+// App continuity plugins
+pub mod open;             // ✅  Open content on remote devices (Issue #113)
+
 // Remote control plugins
 // pub mod remoteinput;   // ⚠️  TODO: Requires mouse_keyboard_input crate (Linux-only)
 // pub mod mpris;         // ⚠️  TODO: Requires Device architecture refactoring for FFI

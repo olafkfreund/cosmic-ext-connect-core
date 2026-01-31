@@ -30,7 +30,7 @@
 use crate::crypto::CertificateInfo;
 use crate::error::{ProtocolError, Result};
 use crate::network::discovery;
-use crate::plugins::{battery::BatteryState, battery::BatteryPlugin, ping::PingPlugin, Plugin, PluginManager as CorePluginManager};
+use crate::plugins::{battery::BatteryState, battery::BatteryPlugin, ping::PingPlugin, PluginManager as CorePluginManager};
 use crate::protocol::Packet;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -862,6 +862,245 @@ pub fn create_battery_request() -> Result<FfiPacket> {
     use serde_json::json;
 
     let packet = Packet::new("cconnect.battery.request".to_string(), json!({}));
+    Ok(packet.into())
+}
+
+// ==========================================================================
+// Open Plugin Functions (App Continuity)
+// ==========================================================================
+
+/// Create an open request packet for URL.
+///
+/// Creates a `cconnect.open.request` packet to request opening a URL
+/// on a remote device. The remote device will open the URL in its
+/// default browser or appropriate application.
+///
+/// # Arguments
+///
+/// * `request_id` - Unique identifier for tracking the response
+/// * `url` - URL to open (http://, https://, mailto:, tel:, etc.)
+/// * `title` - Optional display title for the content
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_open_url_packet;
+///
+/// let packet = create_open_url_packet(
+///     "req-001".to_string(),
+///     "https://example.com".to_string(),
+///     Some("Example Website".to_string()),
+/// )?;
+/// // Send packet to remote device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_open_url_packet(
+    request_id: String,
+    url: String,
+    title: Option<String>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let mut body = json!({
+        "requestId": request_id,
+        "contentType": "url",
+        "url": url,
+        "mimeType": "text/html",
+    });
+
+    if let Some(t) = title {
+        body["title"] = json!(t);
+    }
+
+    let packet = Packet::new("cconnect.open.request".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create an open request packet for a file.
+///
+/// Creates a `cconnect.open.request` packet to request opening a file
+/// on a remote device. The file should already be transferred via the
+/// share plugin before sending this request.
+///
+/// # Arguments
+///
+/// * `request_id` - Unique identifier for tracking the response
+/// * `filename` - Name of the file to open
+/// * `mime_type` - MIME type of the file (e.g., "application/pdf")
+/// * `file_size` - Size of the file in bytes
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_open_file_packet;
+///
+/// let packet = create_open_file_packet(
+///     "req-002".to_string(),
+///     "document.pdf".to_string(),
+///     "application/pdf".to_string(),
+///     1048576,
+/// )?;
+/// // Send packet to remote device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_open_file_packet(
+    request_id: String,
+    filename: String,
+    mime_type: String,
+    file_size: u64,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "requestId": request_id,
+        "contentType": "file",
+        "filename": filename,
+        "mimeType": mime_type,
+        "fileSize": file_size,
+    });
+
+    let packet = Packet::new("cconnect.open.request".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create an open request packet for text content.
+///
+/// Creates a `cconnect.open.request` packet to request opening text
+/// on a remote device. The remote device will open the text in its
+/// default text viewer or editor.
+///
+/// # Arguments
+///
+/// * `request_id` - Unique identifier for tracking the response
+/// * `text` - Text content to open
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_open_text_packet;
+///
+/// let packet = create_open_text_packet(
+///     "req-003".to_string(),
+///     "Hello from remote device!".to_string(),
+/// )?;
+/// // Send packet to remote device...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_open_text_packet(
+    request_id: String,
+    text: String,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "requestId": request_id,
+        "contentType": "text",
+        "url": text,  // Text stored in url field
+        "mimeType": "text/plain",
+    });
+
+    let packet = Packet::new("cconnect.open.request".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create an open response packet.
+///
+/// Creates a `cconnect.open.response` packet to acknowledge an open request.
+/// This is sent after attempting to open content on the local device.
+///
+/// # Arguments
+///
+/// * `request_id` - Request ID from the original open request
+/// * `success` - Whether the content was successfully opened
+/// * `error_message` - Optional error message if unsuccessful
+/// * `opened_with` - Optional name of application that opened the content
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_open_response_packet;
+///
+/// // Success response
+/// let packet = create_open_response_packet(
+///     "req-001".to_string(),
+///     true,
+///     None,
+///     Some("Firefox".to_string()),
+/// )?;
+///
+/// // Failure response
+/// let packet = create_open_response_packet(
+///     "req-002".to_string(),
+///     false,
+///     Some("Unsupported file type".to_string()),
+///     None,
+/// )?;
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_open_response_packet(
+    request_id: String,
+    success: bool,
+    error_message: Option<String>,
+    opened_with: Option<String>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let mut body = json!({
+        "requestId": request_id,
+        "success": success,
+    });
+
+    if let Some(err) = error_message {
+        body["errorMessage"] = json!(err);
+    }
+
+    if let Some(app) = opened_with {
+        body["openedWith"] = json!(app);
+    }
+
+    let packet = Packet::new("cconnect.open.response".to_string(), body);
+    Ok(packet.into())
+}
+
+/// Create an open capability announcement packet.
+///
+/// Creates a `cconnect.open.capability` packet to advertise what types
+/// of content this device can open. Sent during device pairing or
+/// capability negotiation.
+///
+/// # Arguments
+///
+/// * `supported_schemes` - URL schemes supported (e.g., ["http", "https", "mailto"])
+/// * `max_file_size` - Maximum file size in bytes this device can handle
+/// * `supported_mime_types` - MIME type patterns supported (e.g., ["text/*", "image/*"])
+///
+/// # Example
+///
+/// ```rust
+/// use cosmic_connect_core::create_open_capability_packet;
+///
+/// let packet = create_open_capability_packet(
+///     vec!["http".to_string(), "https".to_string(), "mailto".to_string()],
+///     104857600,  // 100 MB
+///     vec!["text/*".to_string(), "image/*".to_string(), "application/pdf".to_string()],
+/// )?;
+/// // Send packet during capability negotiation...
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_open_capability_packet(
+    supported_schemes: Vec<String>,
+    max_file_size: u64,
+    supported_mime_types: Vec<String>,
+) -> Result<FfiPacket> {
+    use serde_json::json;
+
+    let body = json!({
+        "supportedSchemes": supported_schemes,
+        "maxFileSize": max_file_size,
+        "supportedMimeTypes": supported_mime_types,
+    });
+
+    let packet = Packet::new("cconnect.open.capability".to_string(), body);
     Ok(packet.into())
 }
 
@@ -1767,7 +2006,8 @@ pub fn create_plugin_manager() -> Arc<PluginManager> {
 // Interfaces (Objects)
 // ==========================================================================
 
-/// Discovery service
+/// Discovery service (stub for FFI - implementation pending)
+#[allow(dead_code)]
 pub struct DiscoveryService {
     device_info: discovery::DeviceInfo,
     callback: Box<dyn DiscoveryCallback>,

@@ -340,6 +340,92 @@ namespace cosmic_connect_core {
   FfiPacket create_battery_request();
 
   // ========================================================================
+  // Open Plugin (App Continuity)
+  // ========================================================================
+
+  /// Create an open URL request packet
+  ///
+  /// Request remote device to open a URL in its default browser.
+  ///
+  /// # Arguments
+  ///
+  /// * `request_id` - Unique identifier for tracking response
+  /// * `url` - URL to open (http://, https://, mailto:, tel:, etc.)
+  /// * `title` - Optional display title
+  [Throws=ProtocolError]
+  FfiPacket create_open_url_packet(
+    string request_id,
+    string url,
+    string? title
+  );
+
+  /// Create an open file request packet
+  ///
+  /// Request remote device to open a file with appropriate application.
+  ///
+  /// # Arguments
+  ///
+  /// * `request_id` - Unique identifier for tracking response
+  /// * `filename` - Name of the file
+  /// * `mime_type` - MIME type (e.g., "application/pdf")
+  /// * `file_size` - Size in bytes
+  [Throws=ProtocolError]
+  FfiPacket create_open_file_packet(
+    string request_id,
+    string filename,
+    string mime_type,
+    u64 file_size
+  );
+
+  /// Create an open text request packet
+  ///
+  /// Request remote device to open text content in text viewer/editor.
+  ///
+  /// # Arguments
+  ///
+  /// * `request_id` - Unique identifier for tracking response
+  /// * `text` - Text content to open
+  [Throws=ProtocolError]
+  FfiPacket create_open_text_packet(
+    string request_id,
+    string text
+  );
+
+  /// Create an open response packet
+  ///
+  /// Acknowledge an open request with success/failure status.
+  ///
+  /// # Arguments
+  ///
+  /// * `request_id` - Request ID from original request
+  /// * `success` - Whether content was opened successfully
+  /// * `error_message` - Optional error message if failed
+  /// * `opened_with` - Optional application name that opened content
+  [Throws=ProtocolError]
+  FfiPacket create_open_response_packet(
+    string request_id,
+    boolean success,
+    string? error_message,
+    string? opened_with
+  );
+
+  /// Create an open capability announcement packet
+  ///
+  /// Advertise what content types this device can open.
+  ///
+  /// # Arguments
+  ///
+  /// * `supported_schemes` - URL schemes (e.g., ["http", "https"])
+  /// * `max_file_size` - Maximum file size in bytes
+  /// * `supported_mime_types` - MIME type patterns (e.g., ["text/*"])
+  [Throws=ProtocolError]
+  FfiPacket create_open_capability_packet(
+    sequence<string> supported_schemes,
+    u64 max_file_size,
+    sequence<string> supported_mime_types
+  );
+
+  // ========================================================================
   // Notifications Plugin
   // ========================================================================
 
