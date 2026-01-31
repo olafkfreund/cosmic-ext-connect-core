@@ -686,6 +686,378 @@ impl StreamStats {
             0.0
         }
     }
+
+    /// Get average latency in milliseconds (if tracking enabled)
+    pub fn avg_latency_ms(&self) -> Option<f64> {
+        // Latency is tracked via NetworkStats
+        None
+    }
+}
+
+// ============================================================================
+// Performance Optimization: Network Statistics
+// ============================================================================
+
+/// Network statistics for adaptive streaming
+#[derive(Debug, Clone, Default)]
+pub struct NetworkStats {
+    /// Round-trip time in milliseconds
+    pub rtt_ms: u32,
+    /// Packet loss rate (0.0 - 1.0)
+    pub packet_loss: f64,
+    /// Jitter in milliseconds
+    pub jitter_ms: u32,
+    /// Available bandwidth estimate in kbps
+    pub bandwidth_kbps: u32,
+    /// Last update timestamp (Unix ms)
+    pub last_update_ms: u64,
+}
+
+impl NetworkStats {
+    /// Create new network stats
+    pub fn new() -> Self {
+        Self {
+            bandwidth_kbps: 10000, // Assume good network initially
+            ..Default::default()
+        }
+    }
+
+    /// Update RTT measurement
+    pub fn update_rtt(&mut self, rtt_ms: u32) {
+        // Exponential moving average
+        self.rtt_ms = if self.rtt_ms == 0 {
+            rtt_ms
+        } else {
+            (self.rtt_ms * 7 + rtt_ms * 3) / 10
+        };
+        self.update_timestamp();
+    }
+
+    /// Update packet loss rate
+    pub fn update_packet_loss(&mut self, packets_sent: u64, packets_received: u64) {
+        if packets_sent > 0 {
+            self.packet_loss = (packets_sent - packets_received) as f64 / packets_sent as f64;
+        }
+        self.update_timestamp();
+    }
+
+    fn update_timestamp(&mut self) {
+        self.last_update_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+    }
+
+    /// Check if network conditions are good
+    pub fn is_good(&self) -> bool {
+        self.rtt_ms < 50 && self.packet_loss < 0.01
+    }
+
+    /// Check if network conditions are degraded
+    pub fn is_degraded(&self) -> bool {
+        self.rtt_ms > 100 || self.packet_loss > 0.05
+    }
+}
+
+// ============================================================================
+// Performance Optimization: Adaptive Bitrate Controller
+// ============================================================================
+
+/// Adaptive bitrate controller for dynamic quality adjustment
+#[derive(Debug, Clone)]
+pub struct AdaptiveBitrateController {
+    /// Current bitrate in kbps
+    current_bitrate: u32,
+    /// Minimum bitrate in kbps
+    min_bitrate: u32,
+    /// Maximum bitrate in kbps
+    max_bitrate: u32,
+    /// Target latency in milliseconds (reserved for future latency-based adjustment)
+    #[allow(dead_code)]
+    target_latency_ms: u32,
+    /// Last adjustment timestamp
+    last_adjustment_ms: u64,
+    /// Adjustment cooldown in milliseconds
+    cooldown_ms: u64,
+}
+
+impl Default for AdaptiveBitrateController {
+    fn default() -> Self {
+        Self {
+            current_bitrate: 2000,
+            min_bitrate: 500,
+            max_bitrate: 8000,
+            target_latency_ms: 100,
+            last_adjustment_ms: 0,
+            cooldown_ms: 2000, // 2 second cooldown between adjustments
+        }
+    }
+}
+
+impl AdaptiveBitrateController {
+    /// Create a new adaptive bitrate controller
+    pub fn new(initial_bitrate: u32, min_bitrate: u32, max_bitrate: u32) -> Self {
+        Self {
+            current_bitrate: initial_bitrate.clamp(min_bitrate, max_bitrate),
+            min_bitrate,
+            max_bitrate,
+            ..Default::default()
+        }
+    }
+
+    /// Get current bitrate
+    pub fn current_bitrate(&self) -> u32 {
+        self.current_bitrate
+    }
+
+    /// Adjust bitrate based on network conditions
+    ///
+    /// Returns Some(new_bitrate) if adjustment is needed, None otherwise
+    pub fn adjust(&mut self, network_stats: &NetworkStats) -> Option<u32> {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+
+        // Check cooldown
+        if now - self.last_adjustment_ms < self.cooldown_ms {
+            return None;
+        }
+
+        let new_bitrate = if network_stats.is_degraded() {
+            // Network degraded: reduce bitrate by 20%
+            let reduced = (self.current_bitrate as f64 * 0.8) as u32;
+            reduced.max(self.min_bitrate)
+        } else if network_stats.is_good() && self.current_bitrate < self.max_bitrate {
+            // Network good: increase bitrate by 10%
+            let increased = (self.current_bitrate as f64 * 1.1) as u32;
+            increased.min(self.max_bitrate)
+        } else {
+            self.current_bitrate
+        };
+
+        if new_bitrate != self.current_bitrate {
+            self.current_bitrate = new_bitrate;
+            self.last_adjustment_ms = now;
+            Some(new_bitrate)
+        } else {
+            None
+        }
+    }
+
+    /// Force a bitrate change (e.g., user request)
+    pub fn set_bitrate(&mut self, bitrate: u32) {
+        self.current_bitrate = bitrate.clamp(self.min_bitrate, self.max_bitrate);
+    }
+}
+
+// ============================================================================
+// Performance Optimization: Smart Frame Dropping
+// ============================================================================
+
+/// Frame priority for smart dropping
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FramePriority {
+    /// Lowest priority - can be dropped freely
+    Low = 0,
+    /// Medium priority - drop if queue is full
+    Medium = 1,
+    /// High priority - only drop in extreme cases
+    High = 2,
+    /// Critical priority - never drop (I-frames, SPS/PPS)
+    Critical = 3,
+}
+
+impl FrameType {
+    /// Get the drop priority for this frame type
+    pub fn priority(&self) -> FramePriority {
+        match self {
+            FrameType::SpsPps => FramePriority::Critical,
+            FrameType::IFrame => FramePriority::Critical,
+            FrameType::PFrame => FramePriority::Low,
+        }
+    }
+
+    /// Check if this frame can be dropped when queue is full
+    pub fn can_drop(&self) -> bool {
+        self.priority() < FramePriority::High
+    }
+}
+
+/// Smart frame dropper for maintaining low latency
+#[derive(Debug, Clone)]
+pub struct SmartFrameDropper {
+    /// Maximum queue size before dropping
+    max_queue_size: usize,
+    /// Target queue size
+    target_queue_size: usize,
+    /// Consecutive drops counter
+    consecutive_drops: u32,
+    /// Maximum consecutive P-frame drops before requesting I-frame
+    max_consecutive_drops: u32,
+}
+
+impl Default for SmartFrameDropper {
+    fn default() -> Self {
+        Self {
+            max_queue_size: 10,
+            target_queue_size: 3,
+            consecutive_drops: 0,
+            max_consecutive_drops: 30, // About 1 second at 30fps
+        }
+    }
+}
+
+impl SmartFrameDropper {
+    /// Create a new smart frame dropper
+    pub fn new(max_queue_size: usize, target_queue_size: usize) -> Self {
+        Self {
+            max_queue_size,
+            target_queue_size,
+            ..Default::default()
+        }
+    }
+
+    /// Decide whether to drop a frame based on queue state
+    ///
+    /// Returns (should_drop, request_keyframe)
+    pub fn should_drop(&mut self, frame_type: FrameType, current_queue_size: usize) -> (bool, bool) {
+        // Never drop critical frames
+        if !frame_type.can_drop() {
+            self.consecutive_drops = 0;
+            return (false, false);
+        }
+
+        // Drop if queue is too large
+        if current_queue_size >= self.max_queue_size {
+            self.consecutive_drops += 1;
+
+            // Request keyframe if too many consecutive drops
+            let request_keyframe = self.consecutive_drops >= self.max_consecutive_drops;
+            if request_keyframe {
+                self.consecutive_drops = 0;
+            }
+
+            return (true, request_keyframe);
+        }
+
+        // Keep frame if queue is at target or below
+        if current_queue_size <= self.target_queue_size {
+            self.consecutive_drops = 0;
+            return (false, false);
+        }
+
+        // Queue is between target and max - probabilistic drop
+        let drop_probability = (current_queue_size - self.target_queue_size) as f64
+            / (self.max_queue_size - self.target_queue_size) as f64;
+
+        // Use simple deterministic approach for now
+        if drop_probability > 0.5 {
+            self.consecutive_drops += 1;
+            (true, self.consecutive_drops >= self.max_consecutive_drops)
+        } else {
+            self.consecutive_drops = 0;
+            (false, false)
+        }
+    }
+
+    /// Reset the dropper state
+    pub fn reset(&mut self) {
+        self.consecutive_drops = 0;
+    }
+}
+
+// ============================================================================
+// Performance Optimization: Latency Tracker
+// ============================================================================
+
+/// Latency tracker for end-to-end latency measurement
+#[derive(Debug, Clone)]
+pub struct LatencyTracker {
+    /// Recent latency samples (circular buffer)
+    samples: Vec<u32>,
+    /// Current sample index
+    sample_index: usize,
+    /// Maximum samples to keep
+    max_samples: usize,
+    /// Minimum observed latency
+    min_latency_ms: u32,
+    /// Maximum observed latency
+    max_latency_ms: u32,
+}
+
+impl Default for LatencyTracker {
+    fn default() -> Self {
+        Self {
+            samples: Vec::with_capacity(100),
+            sample_index: 0,
+            max_samples: 100,
+            min_latency_ms: u32::MAX,
+            max_latency_ms: 0,
+        }
+    }
+}
+
+impl LatencyTracker {
+    /// Record a latency sample
+    pub fn record(&mut self, latency_ms: u32) {
+        if self.samples.len() < self.max_samples {
+            self.samples.push(latency_ms);
+        } else {
+            self.samples[self.sample_index] = latency_ms;
+        }
+        self.sample_index = (self.sample_index + 1) % self.max_samples;
+
+        self.min_latency_ms = self.min_latency_ms.min(latency_ms);
+        self.max_latency_ms = self.max_latency_ms.max(latency_ms);
+    }
+
+    /// Get average latency in milliseconds
+    pub fn average_ms(&self) -> f64 {
+        if self.samples.is_empty() {
+            0.0
+        } else {
+            self.samples.iter().map(|&x| x as f64).sum::<f64>() / self.samples.len() as f64
+        }
+    }
+
+    /// Get P95 latency in milliseconds
+    pub fn p95_ms(&self) -> u32 {
+        if self.samples.is_empty() {
+            return 0;
+        }
+        let mut sorted = self.samples.clone();
+        sorted.sort_unstable();
+        let idx = (sorted.len() as f64 * 0.95) as usize;
+        sorted.get(idx.min(sorted.len() - 1)).copied().unwrap_or(0)
+    }
+
+    /// Get minimum observed latency
+    pub fn min_ms(&self) -> u32 {
+        if self.min_latency_ms == u32::MAX {
+            0
+        } else {
+            self.min_latency_ms
+        }
+    }
+
+    /// Get maximum observed latency
+    pub fn max_ms(&self) -> u32 {
+        self.max_latency_ms
+    }
+
+    /// Check if latency is within acceptable range
+    pub fn is_acceptable(&self, target_ms: u32) -> bool {
+        self.average_ms() <= target_ms as f64
+    }
+
+    /// Reset the tracker
+    pub fn reset(&mut self) {
+        self.samples.clear();
+        self.sample_index = 0;
+        self.min_latency_ms = u32::MAX;
+        self.max_latency_ms = 0;
+    }
 }
 
 /// Encoded frame ready for decoding
@@ -1233,5 +1605,215 @@ mod tests {
         assert_eq!(encoded.timestamp_us, 1234567890);
         assert_eq!(encoded.sequence_number, 42);
         assert_eq!(encoded.data.len(), 1024);
+    }
+
+    // ========================================================================
+    // Performance Optimization Tests
+    // ========================================================================
+
+    #[test]
+    fn test_network_stats_rtt_smoothing() {
+        let mut stats = NetworkStats::new();
+
+        // Initial RTT
+        stats.update_rtt(100);
+        assert_eq!(stats.rtt_ms, 100);
+
+        // Smoothed RTT (EMA: 70% old + 30% new)
+        stats.update_rtt(50);
+        let expected = (100 * 7 + 50 * 3) / 10;
+        assert_eq!(stats.rtt_ms, expected); // 85ms
+    }
+
+    #[test]
+    fn test_network_stats_conditions() {
+        let mut stats = NetworkStats::new();
+
+        // Good conditions
+        stats.rtt_ms = 30;
+        stats.packet_loss = 0.0;
+        assert!(stats.is_good());
+        assert!(!stats.is_degraded());
+
+        // Degraded conditions
+        stats.rtt_ms = 150;
+        assert!(!stats.is_good());
+        assert!(stats.is_degraded());
+
+        // High packet loss
+        stats.rtt_ms = 30;
+        stats.packet_loss = 0.1;
+        assert!(stats.is_degraded());
+    }
+
+    #[test]
+    fn test_adaptive_bitrate_controller_default() {
+        let controller = AdaptiveBitrateController::default();
+        assert_eq!(controller.current_bitrate(), 2000);
+    }
+
+    #[test]
+    fn test_adaptive_bitrate_reduce_on_degraded() {
+        let mut controller = AdaptiveBitrateController::new(2000, 500, 8000);
+        controller.last_adjustment_ms = 0; // Reset cooldown
+
+        let mut stats = NetworkStats::new();
+        stats.rtt_ms = 150; // Degraded network
+
+        let new_bitrate = controller.adjust(&stats);
+        assert!(new_bitrate.is_some());
+        assert_eq!(new_bitrate.unwrap(), 1600); // 20% reduction
+    }
+
+    #[test]
+    fn test_adaptive_bitrate_increase_on_good() {
+        let mut controller = AdaptiveBitrateController::new(2000, 500, 8000);
+        controller.last_adjustment_ms = 0; // Reset cooldown
+
+        let mut stats = NetworkStats::new();
+        stats.rtt_ms = 30; // Good network
+        stats.packet_loss = 0.0;
+
+        let new_bitrate = controller.adjust(&stats);
+        assert!(new_bitrate.is_some());
+        assert_eq!(new_bitrate.unwrap(), 2200); // 10% increase
+    }
+
+    #[test]
+    fn test_adaptive_bitrate_respects_bounds() {
+        let mut controller = AdaptiveBitrateController::new(600, 500, 8000);
+        controller.last_adjustment_ms = 0;
+
+        let mut stats = NetworkStats::new();
+        stats.rtt_ms = 200; // Very degraded
+
+        let new_bitrate = controller.adjust(&stats);
+        assert!(new_bitrate.is_some());
+        assert_eq!(new_bitrate.unwrap(), 500); // Clamped to min
+    }
+
+    #[test]
+    fn test_frame_type_priority() {
+        assert_eq!(FrameType::SpsPps.priority(), FramePriority::Critical);
+        assert_eq!(FrameType::IFrame.priority(), FramePriority::Critical);
+        assert_eq!(FrameType::PFrame.priority(), FramePriority::Low);
+    }
+
+    #[test]
+    fn test_frame_type_can_drop() {
+        assert!(!FrameType::SpsPps.can_drop());
+        assert!(!FrameType::IFrame.can_drop());
+        assert!(FrameType::PFrame.can_drop());
+    }
+
+    #[test]
+    fn test_smart_frame_dropper_never_drops_critical() {
+        let mut dropper = SmartFrameDropper::new(5, 2);
+
+        // Even with full queue, never drop I-frames
+        let (should_drop, _) = dropper.should_drop(FrameType::IFrame, 10);
+        assert!(!should_drop);
+
+        // Never drop SPS/PPS
+        let (should_drop, _) = dropper.should_drop(FrameType::SpsPps, 10);
+        assert!(!should_drop);
+    }
+
+    #[test]
+    fn test_smart_frame_dropper_drops_p_frames() {
+        let mut dropper = SmartFrameDropper::new(5, 2);
+
+        // P-frames should be dropped when queue is full
+        let (should_drop, _) = dropper.should_drop(FrameType::PFrame, 10);
+        assert!(should_drop);
+    }
+
+    #[test]
+    fn test_smart_frame_dropper_keeps_frames_at_target() {
+        let mut dropper = SmartFrameDropper::new(10, 3);
+
+        // Keep frames when queue is at or below target
+        let (should_drop, _) = dropper.should_drop(FrameType::PFrame, 2);
+        assert!(!should_drop);
+    }
+
+    #[test]
+    fn test_smart_frame_dropper_requests_keyframe() {
+        let mut dropper = SmartFrameDropper::new(5, 2);
+        dropper.max_consecutive_drops = 3;
+
+        // Simulate consecutive drops
+        for _ in 0..2 {
+            let (_, request_keyframe) = dropper.should_drop(FrameType::PFrame, 10);
+            assert!(!request_keyframe);
+        }
+
+        // Third consecutive drop should request keyframe
+        let (should_drop, request_keyframe) = dropper.should_drop(FrameType::PFrame, 10);
+        assert!(should_drop);
+        assert!(request_keyframe);
+    }
+
+    #[test]
+    fn test_latency_tracker_average() {
+        let mut tracker = LatencyTracker::default();
+
+        tracker.record(50);
+        tracker.record(60);
+        tracker.record(70);
+
+        let avg = tracker.average_ms();
+        assert!((avg - 60.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_latency_tracker_p95() {
+        let mut tracker = LatencyTracker::default();
+
+        // Record 100 samples: 1, 2, 3, ..., 100
+        for i in 1..=100 {
+            tracker.record(i);
+        }
+
+        let p95 = tracker.p95_ms();
+        assert!(p95 >= 95 && p95 <= 96);
+    }
+
+    #[test]
+    fn test_latency_tracker_min_max() {
+        let mut tracker = LatencyTracker::default();
+
+        tracker.record(50);
+        tracker.record(100);
+        tracker.record(25);
+
+        assert_eq!(tracker.min_ms(), 25);
+        assert_eq!(tracker.max_ms(), 100);
+    }
+
+    #[test]
+    fn test_latency_tracker_acceptable() {
+        let mut tracker = LatencyTracker::default();
+
+        tracker.record(50);
+        tracker.record(60);
+        tracker.record(70);
+
+        assert!(tracker.is_acceptable(100)); // 60ms avg < 100ms target
+        assert!(!tracker.is_acceptable(50)); // 60ms avg > 50ms target
+    }
+
+    #[test]
+    fn test_latency_tracker_reset() {
+        let mut tracker = LatencyTracker::default();
+
+        tracker.record(100);
+        tracker.record(200);
+
+        tracker.reset();
+
+        assert_eq!(tracker.average_ms(), 0.0);
+        assert_eq!(tracker.min_ms(), 0);
+        assert_eq!(tracker.max_ms(), 0);
     }
 }

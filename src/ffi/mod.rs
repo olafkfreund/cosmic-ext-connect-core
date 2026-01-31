@@ -30,7 +30,13 @@
 use crate::crypto::CertificateInfo;
 use crate::error::{ProtocolError, Result};
 use crate::network::discovery;
-use crate::plugins::{battery::BatteryState, battery::BatteryPlugin, ping::PingPlugin, PluginManager as CorePluginManager};
+use crate::plugins::{
+    battery::BatteryState,
+    battery::BatteryPlugin,
+    ping::PingPlugin,
+    PluginManager as CorePluginManager,
+    notification_image::NotificationImage,
+};
 use crate::protocol::Packet;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -1329,6 +1335,206 @@ pub fn create_notification_reply_packet(
 
     let packet = Packet::new("cconnect.notification.reply".to_string(), body);
     Ok(packet.into())
+}
+
+// ==========================================================================
+// Rich Notification Functions (Issue #125)
+// ==========================================================================
+
+/// Create a rich notification packet with multimedia content.
+///
+/// Creates a notification packet with support for rich text, images, videos, and links.
+/// The notification_json parameter should contain all notification fields including
+/// rich content fields added in Issue #125.
+///
+/// # Arguments
+///
+/// * `notification_json` - JSON string containing notification data with rich fields
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use cosmic_connect_core::create_rich_notification_packet;
+///
+/// let json = r#"{
+///     "id": "notif-123",
+///     "appName": "Messages",
+///     "title": "New Message",
+///     "text": "Check this out!",
+///     "isClearable": true,
+///     "richText": "<b>Check</b> <i>this</i> out!",
+///     "hasRichText": true,
+///     "hasImage": true,
+///     "imageUrl": "https://example.com/image.png",
+///     "imageMimeType": "image/png",
+///     "imageWidth": 800,
+///     "imageHeight": 600
+/// }"#;
+///
+/// let packet = create_rich_notification_packet(json.to_string())?;
+/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// ```
+pub fn create_rich_notification_packet(notification_json: String) -> Result<FfiPacket> {
+    // Reuse the existing create_notification_packet function
+    // since Notification struct now supports rich fields
+    create_notification_packet(notification_json)
+}
+
+/// Attach binary image data to a notification packet.
+///
+/// This function is for future implementation. For now, images should be
+/// included as URLs in the notification JSON via imageUrl field.
+///
+/// # Arguments
+///
+/// * `packet` - The notification packet (currently unused)
+/// * `image_data` - Image binary data (currently unused)
+///
+/// # Returns
+///
+/// Always returns false - image attachment not yet implemented.
+/// Use imageUrl field in notification JSON instead.
+///
+/// # Note
+///
+/// Full implementation tracked in Issue #126
+pub fn attach_image_to_notification_packet(
+    _packet: FfiPacket,
+    _image_data: Vec<u8>,
+) -> Result<bool> {
+    // TODO: Implement image attachment via payload transfer
+    // For now, use imageUrl field with base64 or URL
+    Ok(false)
+}
+
+// ==========================================================================
+// Notification Image Functions (Issue #126)
+// ==========================================================================
+
+/// Create a notification image from RGBA data.
+///
+/// # Arguments
+///
+/// * `width` - Image width in pixels
+/// * `height` - Image height in pixels
+/// * `rgba_data` - RGBA8888 pixel data (must be width * height * 4 bytes)
+///
+/// # Panics
+///
+/// Panics if rgba_data length doesn't match width * height * 4
+///
+/// # Example (Kotlin)
+///
+/// ```kotlin
+/// val bitmap: Bitmap = notification.getLargeIcon()?.toBitmap()
+/// val buffer = ByteBuffer.allocate(bitmap.byteCount)
+/// bitmap.copyPixelsToBuffer(buffer)
+/// val rgba = buffer.array()
+///
+/// val image = createNotificationImage(
+///     bitmap.width.toUInt(),
+///     bitmap.height.toUInt(),
+///     rgba
+/// )
+/// ```
+pub fn create_notification_image(
+    width: u32,
+    height: u32,
+    rgba_data: Vec<u8>,
+) -> Arc<NotificationImage> {
+    Arc::new(NotificationImage::from_rgba(width, height, rgba_data))
+}
+
+/// Create a notification image from encoded bytes (PNG or JPEG).
+///
+/// # Arguments
+///
+/// * `data` - Image file data (PNG or JPEG)
+/// * `mime_type` - MIME type ("image/png" or "image/jpeg")
+///
+/// # Errors
+///
+/// Returns error if decoding fails or format is unsupported
+///
+/// # Example (Kotlin)
+///
+/// ```kotlin
+/// val iconBytes = notification.getLargeIcon()?.toByteArray()
+/// if (iconBytes != null) {
+///     try {
+///         val image = notificationImageFromBytes(iconBytes, "image/png")
+///     } catch (e: Exception) {
+///         Log.e(TAG, "Failed to decode notification icon", e)
+///     }
+/// }
+/// ```
+pub fn notification_image_from_bytes(
+    data: Vec<u8>,
+    mime_type: String,
+) -> Result<Arc<NotificationImage>> {
+    let image = match mime_type.as_str() {
+        "image/png" => NotificationImage::from_png_bytes(&data)
+            .map_err(|e| ProtocolError::InvalidPacket(format!("PNG decode failed: {}", e)))?,
+        "image/jpeg" | "image/jpg" => NotificationImage::from_jpeg_bytes(&data)
+            .map_err(|e| ProtocolError::InvalidPacket(format!("JPEG decode failed: {}", e)))?,
+        _ => {
+            return Err(ProtocolError::InvalidPacket(format!(
+                "Unsupported image format: {}. Use image/png or image/jpeg",
+                mime_type
+            )))
+        }
+    };
+
+    Ok(Arc::new(image))
+}
+
+/// Scale a notification image to fit within maximum dimensions.
+///
+/// Preserves aspect ratio. If image is already smaller than max dimensions,
+/// returns a clone unchanged.
+///
+/// # Arguments
+///
+/// * `image` - The image to scale
+/// * `max_width` - Maximum width in pixels
+/// * `max_height` - Maximum height in pixels
+///
+/// # Example (Kotlin)
+///
+/// ```kotlin
+/// val scaled = scaleNotificationImage(image, 128u, 128u)
+/// ```
+pub fn scale_notification_image(
+    image: Arc<NotificationImage>,
+    max_width: u32,
+    max_height: u32,
+) -> Arc<NotificationImage> {
+    Arc::new(image.scale(max_width, max_height))
+}
+
+/// Get RGBA data from a notification image.
+///
+/// # Arguments
+///
+/// * `image` - The notification image
+///
+/// # Returns
+///
+/// RGBA8888 pixel data
+///
+/// # Example (Kotlin)
+///
+/// ```kotlin
+/// val rgbaData = getNotificationImageData(image)
+/// val bitmap = Bitmap.createBitmap(
+///     image.width().toInt(),
+///     image.height().toInt(),
+///     Bitmap.Config.ARGB_8888
+/// )
+/// bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgbaData))
+/// ```
+pub fn get_notification_image_data(image: Arc<NotificationImage>) -> Vec<u8> {
+    image.data.clone()
 }
 
 // ==========================================================================

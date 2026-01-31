@@ -123,6 +123,77 @@ use tracing::{debug, info, warn};
 
 use crate::plugins::Plugin;
 
+/// Type of link embedded in notification
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum LinkType {
+    /// Web URL (http/https)
+    Web,
+    /// Email address (mailto:)
+    Email,
+    /// Phone number (tel:)
+    Phone,
+    /// Map coordinates (geo:)
+    Map,
+    /// App deep link
+    DeepLink,
+}
+
+/// Link embedded in rich notification
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NotificationLink {
+    /// URL of the link
+    pub url: String,
+
+    /// Display label for the link
+    pub label: String,
+
+    /// Type of link
+    #[serde(rename = "linkType")]
+    pub link_type: LinkType,
+}
+
+impl NotificationLink {
+    /// Create a new notification link
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::{NotificationLink, LinkType};
+    ///
+    /// let link = NotificationLink::new(
+    ///     "https://example.com",
+    ///     "View Details",
+    ///     LinkType::Web
+    /// );
+    ///
+    /// assert_eq!(link.url, "https://example.com");
+    /// assert_eq!(link.label, "View Details");
+    /// ```
+    pub fn new(url: impl Into<String>, label: impl Into<String>, link_type: LinkType) -> Self {
+        Self {
+            url: url.into(),
+            label: label.into(),
+            link_type,
+        }
+    }
+
+    /// Check if link is a web URL
+    pub fn is_web_link(&self) -> bool {
+        matches!(self.link_type, LinkType::Web)
+    }
+
+    /// Check if link is an email
+    pub fn is_email(&self) -> bool {
+        matches!(self.link_type, LinkType::Email)
+    }
+
+    /// Check if link is a phone number
+    pub fn is_phone(&self) -> bool {
+        matches!(self.link_type, LinkType::Phone)
+    }
+}
+
 /// Notification data
 ///
 /// Represents a notification from a remote device.
@@ -196,6 +267,59 @@ pub struct Notification {
     /// MD5 hash of notification icon
     #[serde(rename = "payloadHash", skip_serializing_if = "Option::is_none")]
     pub payload_hash: Option<String>,
+
+    // Rich notification content (Issue #125)
+    /// HTML-formatted rich text content
+    #[serde(rename = "richText", skip_serializing_if = "Option::is_none")]
+    pub rich_text: Option<String>,
+
+    /// Whether notification has rich text
+    #[serde(rename = "hasRichText", skip_serializing_if = "Option::is_none")]
+    pub has_rich_text: Option<bool>,
+
+    /// Whether notification has image
+    #[serde(rename = "hasImage", skip_serializing_if = "Option::is_none")]
+    pub has_image: Option<bool>,
+
+    /// Image URL or base64 data
+    #[serde(rename = "imageUrl", skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+
+    /// MIME type of image (e.g., "image/png", "image/jpeg")
+    #[serde(rename = "imageMimeType", skip_serializing_if = "Option::is_none")]
+    pub image_mime_type: Option<String>,
+
+    /// Image width in pixels
+    #[serde(rename = "imageWidth", skip_serializing_if = "Option::is_none")]
+    pub image_width: Option<u32>,
+
+    /// Image height in pixels
+    #[serde(rename = "imageHeight", skip_serializing_if = "Option::is_none")]
+    pub image_height: Option<u32>,
+
+    /// Whether notification has video
+    #[serde(rename = "hasVideo", skip_serializing_if = "Option::is_none")]
+    pub has_video: Option<bool>,
+
+    /// Video URL
+    #[serde(rename = "videoUrl", skip_serializing_if = "Option::is_none")]
+    pub video_url: Option<String>,
+
+    /// Video thumbnail URL
+    #[serde(rename = "videoThumbnailUrl", skip_serializing_if = "Option::is_none")]
+    pub video_thumbnail_url: Option<String>,
+
+    /// Video duration in milliseconds
+    #[serde(rename = "videoDuration", skip_serializing_if = "Option::is_none")]
+    pub video_duration: Option<i64>,
+
+    /// MIME type of video (e.g., "video/mp4")
+    #[serde(rename = "videoMimeType", skip_serializing_if = "Option::is_none")]
+    pub video_mime_type: Option<String>,
+
+    /// Embedded links in notification
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub links: Option<Vec<NotificationLink>>,
 }
 
 impl Notification {
@@ -237,6 +361,20 @@ impl Notification {
             request_reply_id: None,
             actions: None,
             payload_hash: None,
+            // Rich content fields
+            rich_text: None,
+            has_rich_text: None,
+            has_image: None,
+            image_url: None,
+            image_mime_type: None,
+            image_width: None,
+            image_height: None,
+            has_video: None,
+            video_url: None,
+            video_thumbnail_url: None,
+            video_duration: None,
+            video_mime_type: None,
+            links: None,
         }
     }
 
@@ -286,6 +424,113 @@ impl Notification {
             .as_ref()
             .map(|a| !a.is_empty())
             .unwrap_or(false)
+    }
+
+    // Rich notification helper methods (Issue #125)
+
+    /// Check if notification has rich text content
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::Notification;
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// notif.rich_text = Some("<b>Bold</b> text".to_string());
+    /// notif.has_rich_text = Some(true);
+    /// assert!(notif.has_rich_text());
+    /// ```
+    pub fn has_rich_text(&self) -> bool {
+        self.has_rich_text.unwrap_or(false) && self.rich_text.is_some()
+    }
+
+    /// Check if notification has image
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::Notification;
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// notif.has_image = Some(true);
+    /// notif.image_url = Some("https://example.com/image.png".to_string());
+    /// assert!(notif.has_image());
+    /// ```
+    pub fn has_image(&self) -> bool {
+        self.has_image.unwrap_or(false) && self.image_url.is_some()
+    }
+
+    /// Check if notification has video
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::Notification;
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// notif.has_video = Some(true);
+    /// notif.video_url = Some("https://example.com/video.mp4".to_string());
+    /// assert!(notif.has_video());
+    /// ```
+    pub fn has_video(&self) -> bool {
+        self.has_video.unwrap_or(false) && self.video_url.is_some()
+    }
+
+    /// Check if notification has embedded links
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::{Notification, NotificationLink, LinkType};
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// notif.links = Some(vec![
+    ///     NotificationLink::new("https://example.com", "View", LinkType::Web)
+    /// ]);
+    /// assert!(notif.has_links());
+    /// ```
+    pub fn has_links(&self) -> bool {
+        self.links
+            .as_ref()
+            .map(|l| !l.is_empty())
+            .unwrap_or(false)
+    }
+
+    /// Get image dimensions if available
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::Notification;
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// notif.image_width = Some(1920);
+    /// notif.image_height = Some(1080);
+    /// assert_eq!(notif.image_dimensions(), Some((1920, 1080)));
+    /// ```
+    pub fn image_dimensions(&self) -> Option<(u32, u32)> {
+        match (self.image_width, self.image_height) {
+            (Some(w), Some(h)) => Some((w, h)),
+            _ => None,
+        }
+    }
+
+    /// Check if this is a rich notification (has any rich content)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use cosmic_connect_core::plugins::notification::Notification;
+    ///
+    /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
+    /// assert!(!notif.is_rich());
+    ///
+    /// notif.rich_text = Some("<b>Rich</b>".to_string());
+    /// notif.has_rich_text = Some(true);
+    /// assert!(notif.is_rich());
+    /// ```
+    pub fn is_rich(&self) -> bool {
+        self.has_rich_text() || self.has_image() || self.has_video() || self.has_links()
     }
 }
 
@@ -869,5 +1114,269 @@ mod tests {
         assert_eq!(json["title"], "Title");
         assert_eq!(json["text"], "Text");
         assert_eq!(json["isClearable"], true);
+    }
+
+    // Rich notification tests (Issue #125)
+
+    #[test]
+    fn test_notification_link_creation() {
+        let link = NotificationLink::new(
+            "https://example.com",
+            "View Details",
+            LinkType::Web,
+        );
+
+        assert_eq!(link.url, "https://example.com");
+        assert_eq!(link.label, "View Details");
+        assert_eq!(link.link_type, LinkType::Web);
+        assert!(link.is_web_link());
+        assert!(!link.is_email());
+    }
+
+    #[test]
+    fn test_notification_link_types() {
+        let web = NotificationLink::new("https://example.com", "Web", LinkType::Web);
+        assert!(web.is_web_link());
+
+        let email = NotificationLink::new("mailto:test@example.com", "Email", LinkType::Email);
+        assert!(email.is_email());
+
+        let phone = NotificationLink::new("tel:+1234567890", "Call", LinkType::Phone);
+        assert!(phone.is_phone());
+    }
+
+    #[test]
+    fn test_notification_rich_text() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+        assert!(!notif.has_rich_text());
+
+        notif.rich_text = Some("<b>Bold</b> text".to_string());
+        notif.has_rich_text = Some(true);
+        assert!(notif.has_rich_text());
+        assert!(notif.is_rich());
+    }
+
+    #[test]
+    fn test_notification_image() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+        assert!(!notif.has_image());
+
+        notif.has_image = Some(true);
+        notif.image_url = Some("https://example.com/image.png".to_string());
+        notif.image_mime_type = Some("image/png".to_string());
+        notif.image_width = Some(1920);
+        notif.image_height = Some(1080);
+
+        assert!(notif.has_image());
+        assert!(notif.is_rich());
+        assert_eq!(notif.image_dimensions(), Some((1920, 1080)));
+    }
+
+    #[test]
+    fn test_notification_video() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+        assert!(!notif.has_video());
+
+        notif.has_video = Some(true);
+        notif.video_url = Some("https://example.com/video.mp4".to_string());
+        notif.video_thumbnail_url = Some("https://example.com/thumb.jpg".to_string());
+        notif.video_duration = Some(60000); // 60 seconds
+        notif.video_mime_type = Some("video/mp4".to_string());
+
+        assert!(notif.has_video());
+        assert!(notif.is_rich());
+        assert_eq!(notif.video_duration, Some(60000));
+    }
+
+    #[test]
+    fn test_notification_links() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+        assert!(!notif.has_links());
+
+        notif.links = Some(vec![
+            NotificationLink::new("https://example.com", "View Details", LinkType::Web),
+            NotificationLink::new("mailto:contact@example.com", "Email Us", LinkType::Email),
+        ]);
+
+        assert!(notif.has_links());
+        assert!(notif.is_rich());
+        assert_eq!(notif.links.as_ref().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn test_notification_is_rich() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+        assert!(!notif.is_rich());
+
+        // Rich text makes it rich
+        notif.rich_text = Some("<b>Bold</b>".to_string());
+        notif.has_rich_text = Some(true);
+        assert!(notif.is_rich());
+
+        // Reset
+        notif = Notification::new("2", "App", "Title", "Text", true);
+
+        // Image makes it rich
+        notif.has_image = Some(true);
+        notif.image_url = Some("https://example.com/image.png".to_string());
+        assert!(notif.is_rich());
+
+        // Reset
+        notif = Notification::new("3", "App", "Title", "Text", true);
+
+        // Video makes it rich
+        notif.has_video = Some(true);
+        notif.video_url = Some("https://example.com/video.mp4".to_string());
+        assert!(notif.is_rich());
+
+        // Reset
+        notif = Notification::new("4", "App", "Title", "Text", true);
+
+        // Links make it rich
+        notif.links = Some(vec![
+            NotificationLink::new("https://example.com", "Link", LinkType::Web)
+        ]);
+        assert!(notif.is_rich());
+    }
+
+    #[test]
+    fn test_rich_notification_serialization() {
+        let mut notif = Notification::new("123", "Messages", "New Message", "Check this out!", true);
+
+        // Add rich content
+        notif.rich_text = Some("<b>Check</b> <i>this</i> out!".to_string());
+        notif.has_rich_text = Some(true);
+        notif.has_image = Some(true);
+        notif.image_url = Some("https://example.com/image.png".to_string());
+        notif.image_mime_type = Some("image/png".to_string());
+        notif.image_width = Some(800);
+        notif.image_height = Some(600);
+        notif.links = Some(vec![
+            NotificationLink::new("https://example.com/details", "View Details", LinkType::Web),
+        ]);
+
+        let json = serde_json::to_value(&notif).unwrap();
+
+        // Check basic fields
+        assert_eq!(json["id"], "123");
+        assert_eq!(json["appName"], "Messages");
+
+        // Check rich fields
+        assert_eq!(json["richText"], "<b>Check</b> <i>this</i> out!");
+        assert_eq!(json["hasRichText"], true);
+        assert_eq!(json["hasImage"], true);
+        assert_eq!(json["imageUrl"], "https://example.com/image.png");
+        assert_eq!(json["imageMimeType"], "image/png");
+        assert_eq!(json["imageWidth"], 800);
+        assert_eq!(json["imageHeight"], 600);
+
+        // Check links
+        assert!(json["links"].is_array());
+        assert_eq!(json["links"][0]["url"], "https://example.com/details");
+        assert_eq!(json["links"][0]["label"], "View Details");
+        assert_eq!(json["links"][0]["linkType"], "web");
+    }
+
+    #[test]
+    fn test_rich_notification_deserialization() {
+        let json = serde_json::json!({
+            "id": "123",
+            "appName": "Messages",
+            "title": "New Message",
+            "text": "Check this out!",
+            "isClearable": true,
+            "richText": "<b>Rich</b> content",
+            "hasRichText": true,
+            "hasImage": true,
+            "imageUrl": "https://example.com/image.png",
+            "imageMimeType": "image/png",
+            "imageWidth": 1920,
+            "imageHeight": 1080,
+            "hasVideo": true,
+            "videoUrl": "https://example.com/video.mp4",
+            "videoThumbnailUrl": "https://example.com/thumb.jpg",
+            "videoDuration": 30000,
+            "videoMimeType": "video/mp4",
+            "links": [
+                {
+                    "url": "https://example.com",
+                    "label": "View",
+                    "linkType": "web"
+                }
+            ]
+        });
+
+        let notif: Notification = serde_json::from_value(json).unwrap();
+
+        assert_eq!(notif.id, "123");
+        assert_eq!(notif.app_name, "Messages");
+        assert!(notif.has_rich_text());
+        assert!(notif.has_image());
+        assert!(notif.has_video());
+        assert!(notif.has_links());
+        assert!(notif.is_rich());
+        assert_eq!(notif.image_dimensions(), Some((1920, 1080)));
+        assert_eq!(notif.video_duration, Some(30000));
+    }
+
+    #[tokio::test]
+    async fn test_handle_rich_notification() {
+        let mut plugin = NotificationPlugin::new();
+        plugin.device_id = Some("test-device".to_string());
+
+        // Create rich notification
+        let mut notif = Notification::new("rich-123", "Messages", "Rich Message", "Content", true);
+        notif.rich_text = Some("<b>Bold</b> text".to_string());
+        notif.has_rich_text = Some(true);
+        notif.has_image = Some(true);
+        notif.image_url = Some("https://example.com/image.png".to_string());
+
+        let packet = plugin.create_notification_packet(&notif);
+        plugin.handle_packet(&packet).await.unwrap();
+
+        assert_eq!(plugin.notification_count(), 1);
+        let stored = plugin.get_notification("rich-123").unwrap();
+        assert!(stored.has_rich_text());
+        assert!(stored.has_image());
+        assert!(stored.is_rich());
+    }
+
+    #[test]
+    fn test_link_type_serialization() {
+        let link = NotificationLink::new("https://example.com", "Web", LinkType::Web);
+        let json = serde_json::to_value(&link).unwrap();
+        assert_eq!(json["linkType"], "web");
+
+        let email = NotificationLink::new("mailto:test@example.com", "Email", LinkType::Email);
+        let json = serde_json::to_value(&email).unwrap();
+        assert_eq!(json["linkType"], "email");
+
+        let phone = NotificationLink::new("tel:+1234567890", "Phone", LinkType::Phone);
+        let json = serde_json::to_value(&phone).unwrap();
+        assert_eq!(json["linkType"], "phone");
+
+        let map = NotificationLink::new("geo:37.7749,-122.4194", "Map", LinkType::Map);
+        let json = serde_json::to_value(&map).unwrap();
+        assert_eq!(json["linkType"], "map");
+
+        let deep = NotificationLink::new("app://action", "Open", LinkType::DeepLink);
+        let json = serde_json::to_value(&deep).unwrap();
+        assert_eq!(json["linkType"], "deeplink");
+    }
+
+    #[test]
+    fn test_image_dimensions_helper() {
+        let mut notif = Notification::new("1", "App", "Title", "Text", true);
+
+        // No dimensions
+        assert_eq!(notif.image_dimensions(), None);
+
+        // Only width
+        notif.image_width = Some(1920);
+        assert_eq!(notif.image_dimensions(), None);
+
+        // Both width and height
+        notif.image_height = Some(1080);
+        assert_eq!(notif.image_dimensions(), Some((1920, 1080)));
     }
 }

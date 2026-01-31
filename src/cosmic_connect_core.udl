@@ -495,6 +495,76 @@ namespace cosmic_connect_core {
     string message
   );
 
+  // ========================================================================
+  // Rich Notifications (Issue #136 - Phase 3)
+  // ========================================================================
+
+  /// Create a rich notification packet with multimedia content
+  ///
+  /// Creates a notification packet with support for rich text, images, videos, and links.
+  /// Pass notification data as JSON string to avoid massive parameter list.
+  ///
+  /// Required fields: id, appName, title, text, isClearable
+  /// Optional rich fields: richText, hasImage, imageWidth, imageHeight,
+  ///                       hasVideo, videoUrl, videoThumbnailUrl, videoDuration, links
+  ///
+  /// # Arguments
+  ///
+  /// * `notification_json` - JSON string with notification data including rich fields
+  [Throws=ProtocolError]
+  FfiPacket create_rich_notification_packet(string notification_json);
+
+  /// Attach binary image data to a notification packet
+  ///
+  /// After creating a notification with hasImage: true, use this to attach
+  /// the actual image binary data as a payload.
+  ///
+  /// # Arguments
+  ///
+  /// * `packet` - The notification packet to attach image to
+  /// * `image_data` - Raw image bytes (JPEG, PNG, or WebP, max 5MB)
+  ///
+  /// # Returns
+  ///
+  /// true if image was attached successfully, false otherwise
+  [Throws=ProtocolError]
+  boolean attach_image_to_notification_packet(
+    FfiPacket packet,
+    sequence<u8> image_data
+  );
+
+  // ========================================================================
+  // Notification Images (Issue #126)
+  // ========================================================================
+
+  /// Create a notification image from RGBA data
+  ///
+  /// # Arguments
+  ///
+  /// * `width` - Image width in pixels
+  /// * `height` - Image height in pixels
+  /// * `rgba_data` - RGBA8888 pixel data (must be width * height * 4 bytes)
+  NotificationImage create_notification_image(u32 width, u32 height, bytes rgba_data);
+
+  /// Create a notification image from encoded bytes (PNG or JPEG)
+  ///
+  /// # Arguments
+  ///
+  /// * `data` - Image file data (PNG or JPEG)
+  /// * `mime_type` - MIME type ("image/png" or "image/jpeg")
+  [Throws=ProtocolError]
+  NotificationImage notification_image_from_bytes(bytes data, string mime_type);
+
+  /// Scale a notification image to fit within maximum dimensions
+  NotificationImage scale_notification_image(
+    NotificationImage image,
+    u32 max_width,
+    u32 max_height
+  );
+
+  /// Get RGBA data from a notification image
+  bytes get_notification_image_data(NotificationImage image);
+
   /// Start a payload download
   ///
   /// Downloads a file payload from a remote device via TCP connection.
@@ -861,6 +931,33 @@ interface PayloadTransferHandle {
 
   /// Check if transfer is cancelled
   boolean is_cancelled();
+};
+
+/// Notification image (Issue #126)
+///
+/// Represents an image for rich notifications.
+/// Compatible with freedesktop notification specification.
+interface NotificationImage {
+  /// Get image width in pixels
+  u32 width();
+
+  /// Get image height in pixels
+  u32 height();
+
+  /// Get row stride (bytes per row)
+  u32 rowstride();
+
+  /// Check if image has alpha channel
+  boolean has_alpha();
+
+  /// Get bits per color sample (typically 8)
+  u8 bits_per_sample();
+
+  /// Get number of color channels (3 for RGB, 4 for RGBA)
+  u8 channels();
+
+  /// Get image data size in bytes
+  u64 data_size();
 };
 
 // ==========================================================================

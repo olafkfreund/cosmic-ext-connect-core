@@ -122,6 +122,7 @@ pub mod battery;       // ✅ Battery status monitoring
 
 // Communication plugins
 pub mod notification;   // ✅ Device architecture refactored for FFI
+pub mod notification_image; // ✅ Rich notification image support (Issue #126)
 // pub mod telephony;    // ⚠️  TODO: Requires Device architecture refactoring for FFI
 // pub mod contacts;     // ⚠️  TODO: Requires Device architecture refactoring for FFI
 

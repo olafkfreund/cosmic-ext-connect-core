@@ -62,6 +62,9 @@ pub use ffi::{
     create_notification_packet, create_cancel_notification_packet,
     create_notification_request_packet, create_dismiss_notification_packet,
     create_notification_action_packet, create_notification_reply_packet,
+    create_rich_notification_packet, attach_image_to_notification_packet,
+    create_notification_image, notification_image_from_bytes,
+    scale_notification_image, get_notification_image_data,
     create_presenter_pointer, create_presenter_stop,
     create_systemvolume_volume, create_systemvolume_mute,
     create_systemvolume_enable, create_systemvolume_request_sinks,
@@ -72,6 +75,9 @@ pub use ffi::{
     create_digitizer_session, create_digitizer_event,
     create_sftp_packet,
 };
+
+// Re-export NotificationImage for UniFFI
+pub use plugins::notification_image::NotificationImage;
 
 // Public modules
 pub mod protocol;

@@ -74,6 +74,9 @@ v4l = { version = "0.14", optional = true }  # V4L2 device access
 openh264 = { version = "0.6", optional = true }  # H.264 decoding
 url = "2.5.8"
 
+# Image processing for notification icons
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = "0.5"

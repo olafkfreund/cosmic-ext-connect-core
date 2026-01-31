@@ -580,7 +580,7 @@ impl SharePlugin {
                     if let Some(host) = device_host {
                         let host_clone = host.to_string();
                         let filename_clone = filename.to_string();
-                        let size = file_info.size;
+                        let _size = file_info.size;
                         let device_name_clone = device_name.to_string();
 
                         // Spawn background task to download file
