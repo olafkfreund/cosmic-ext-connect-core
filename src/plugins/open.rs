@@ -587,15 +587,28 @@ impl OpenPlugin {
             .host_str()
             .ok_or_else(|| OpenError::InvalidUrl("Missing host".to_string()))?;
 
-        // Check for localhost
-        if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+        // Check for localhost string
+        if host == "localhost" || host == "127.0.0.1" {
             return Err(OpenError::HostBlocked(format!("Localhost: {}", host)));
         }
 
-        // Try to parse as IP address
-        if let Ok(ip) = host.parse::<IpAddr>() {
-            if self.is_blocked_ip(&ip) {
-                return Err(OpenError::HostBlocked(format!("Internal IP: {}", ip)));
+        // Use url::Host which handles IPv6 properly
+        if let Some(url_host) = url.host() {
+            use url::Host;
+            match url_host {
+                Host::Ipv4(ip) => {
+                    if self.is_blocked_ip(&IpAddr::V4(ip)) {
+                        return Err(OpenError::HostBlocked(format!("Internal IP: {}", ip)));
+                    }
+                }
+                Host::Ipv6(ip) => {
+                    if self.is_blocked_ip(&IpAddr::V6(ip)) {
+                        return Err(OpenError::HostBlocked(format!("Internal IP: {}", ip)));
+                    }
+                }
+                Host::Domain(_) => {
+                    // Domain names are OK (unless they're "localhost" which we check above)
+                }
             }
         }
 
