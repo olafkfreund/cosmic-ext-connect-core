@@ -97,9 +97,42 @@ impl PresenterPlugin {
             }
 
             debug!("Presenter pointer moved: dx={}, dy={}", dx, dy);
-            // TODO: Implement laser pointer visualization via COSMIC APIs
-            // This would typically show a red dot or highlight on screen
-            // that moves according to dx/dy values
+
+            // Laser pointer visualization implementation plan:
+            //
+            // The presenter plugin in cosmic-connect-core only handles protocol-level
+            // logic (receiving and parsing presenter events). Visual feedback must be
+            // implemented in the COSMIC Desktop applet using COSMIC compositor APIs.
+            //
+            // Required COSMIC APIs (to be implemented in cosmic-applet-connect):
+            //
+            // 1. **Layer Shell Window**: Create a fullscreen transparent overlay window
+            //    using cosmic::iced::wayland::layer_surface to display the pointer
+            //
+            // 2. **Custom Widget**: Implement a pointer indicator widget that:
+            //    - Renders a red circular dot (configurable color/size)
+            //    - Tracks cumulative dx/dy deltas to maintain screen position
+            //    - Resets position when presentation mode starts
+            //
+            // 3. **Input Pass-through**: Configure window with:
+            //    - `input_regions: None` to allow clicks through to presentation software
+            //    - `keyboard_interactivity: None` to avoid capturing keyboard events
+            //
+            // 4. **Animation**: Use cosmic::iced::time subscription for smooth movement
+            //    interpolation between delta updates
+            //
+            // Integration approach:
+            // - This plugin emits presenter events via plugin callback channel
+            // - Applet subscribes to presenter events for the active device
+            // - Applet creates/destroys overlay window based on presentation_active state
+            // - Window widget processes dx/dy deltas to update pointer position
+            //
+            // Reference implementations:
+            // - KDE Plasma presenter plugin: Uses X11 overlay window with XCB
+            // - GNOME Shell presenter mode: Uses Clutter stage overlay
+            //
+            // For COSMIC implementation, see cosmic-applet-connect/src/presenter_overlay.rs
+            // (module to be created when implementing this feature)
         }
 
         Ok(())

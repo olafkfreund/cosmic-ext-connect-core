@@ -602,14 +602,25 @@ impl SharePlugin {
                                 filename_clone, device_name_clone, host_clone, port, file_path
                             );
 
-                            // TODO: Implement payload download (Issue #53 Phase 2)
-                            // PayloadClient needs to be implemented or imported from platform layer
-                            warn!("Payload download not yet implemented - file will not be downloaded");
+                            // FUTURE WORK (Issue #53 Phase 2): Payload transfer not implemented in core library
+                            //
+                            // The cosmic-connect-core library is designed as a minimal protocol
+                            // implementation without platform-specific code. Payload transfers
+                            // require platform-specific networking and file I/O.
+                            //
+                            // For payload transfers, use cosmic-connect-protocol which includes
+                            // TlsPayloadClient for secure file downloads compatible with Android.
+                            //
+                            // Example implementation (from cosmic-connect-protocol):
+                            //   use crate::TlsPayloadClient;
+                            //   let client = TlsPayloadClient::new(&host, port, &tls_config).await?;
+                            //   client.receive_file(&file_path, size).await?;
+                            warn!("Payload download not implemented in core library - use cosmic-connect-protocol for file transfers");
 
-                            /* TODO: Restore when PayloadClient is available
+                            /* Reference implementation (see cosmic-connect-protocol/src/plugins/share.rs:708-791):
                             // Connect to payload server and download file
-                            use crate::PayloadClient;
-                            match PayloadClient::new(&host_clone, port).await {
+                            use crate::TlsPayloadClient;
+                            match TlsPayloadClient::new(&host_clone, port, &tls_config).await {
                                 Ok(client) => {
                                     match client.receive_file(&file_path, size as u64).await {
                                         Ok(()) => {
@@ -768,48 +779,18 @@ impl Plugin for SharePlugin {
     }
 }
 
-/*
-// TODO: PluginFactory is not part of the current plugin system
-// Commented out pending architecture decision (Issue #53)
+// NOTE: PluginFactory trait not used in core library
+//
+// The cosmic-connect-core library uses a simpler Plugin trait only,
+// without the factory pattern. The PluginFactory trait is part of
+// cosmic-connect-protocol for more complex plugin management.
+//
+// For factory-based plugin creation, see cosmic-connect-protocol/src/plugins/share.rs:939-967
 
-/// Factory for creating SharePlugin instances
-#[derive(Debug, Clone, Copy)]
-pub struct SharePluginFactory;
-
-impl PluginFactory for SharePluginFactory {
-    fn name(&self) -> &str {
-        "share"
-    }
-
-    fn incoming_capabilities(&self) -> Vec<String> {
-        vec![
-            "cconnect.share.request".to_string(),
-            "cconnect.share.request.update".to_string(),
-        ]
-    }
-
-    fn outgoing_capabilities(&self) -> Vec<String> {
-        vec![
-            "cconnect.share.request".to_string(),
-            "cconnect.share.request.update".to_string(),
-        ]
-    }
-
-    fn create(&self) -> Box<dyn Plugin> {
-        Box::new(SharePlugin::new())
-    }
-}
-*/
-
-// TODO: Update tests to use new API without Device dependency
 #[cfg(test)]
-#[allow(dead_code)]
 mod tests {
     use super::*;
     use serde_json::json;
-
-    // Tests temporarily disabled pending Device architecture refactoring
-    // See Issue #53 for migration plan
 
     #[test]
     fn test_plugin_creation() {
@@ -833,24 +814,24 @@ mod tests {
         assert!(outgoing.contains(&"cconnect.share.request.update".to_string()));
     }
 
-    /*
-    // TODO: Update these tests to use new API without Device dependency
-    // Tests below require Device architecture refactoring (Issue #53 Phase 1 complete, tests pending)
-
     #[tokio::test]
     async fn test_plugin_lifecycle() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
+
+        // Set device info directly (no Device dependency)
+        plugin.set_device_info(
+            "test_device_123".to_string(),
+            "Test Device".to_string(),
+            Some("192.168.1.100".to_string()),
+        );
 
         // Initialize
-        plugin.init(&device).await.unwrap();
+        plugin.initialize().await.unwrap();
         assert!(plugin.device_id.is_some());
+        assert_eq!(plugin.device_id.as_deref(), Some("test_device_123"));
 
-        // Start
-        plugin.start().await.unwrap();
-
-        // Stop
-        plugin.stop().await.unwrap();
+        // Shutdown
+        plugin.shutdown().await.unwrap();
     }
 
     #[test]
@@ -930,10 +911,15 @@ mod tests {
     #[tokio::test]
     async fn test_handle_file_share() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
 
-        let mut device = create_test_device();
+        // Set device info
+        plugin.set_device_info(
+            "test_device_456".to_string(),
+            "Test Phone".to_string(),
+            Some("192.168.1.50".to_string()),
+        );
+        plugin.initialize().await.unwrap();
+
         let packet = Packet::new(
             "cconnect.share.request",
             json!({
@@ -945,7 +931,7 @@ mod tests {
         )
         .with_payload_size(2048);
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.share_count(), 1);
         let shares = plugin.get_all_shares().await;
@@ -963,16 +949,19 @@ mod tests {
     #[tokio::test]
     async fn test_handle_text_share() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.set_device_info(
+            "test_device_789".to_string(),
+            "Test Tablet".to_string(),
+            None,
+        );
+        plugin.initialize().await.unwrap();
 
-        let mut device = create_test_device();
         let packet = Packet::new(
             "cconnect.share.request",
             json!({ "text": "Test message" }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.share_count(), 1);
         let shares = plugin.get_all_shares().await;
@@ -987,16 +976,19 @@ mod tests {
     #[tokio::test]
     async fn test_handle_url_share() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.set_device_info(
+            "test_device_abc".to_string(),
+            "Test Laptop".to_string(),
+            None,
+        );
+        plugin.initialize().await.unwrap();
 
-        let mut device = create_test_device();
         let packet = Packet::new(
             "cconnect.share.request",
             json!({ "url": "https://example.com" }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         assert_eq!(plugin.share_count(), 1);
         let shares = plugin.get_all_shares().await;
@@ -1011,10 +1003,13 @@ mod tests {
     #[tokio::test]
     async fn test_handle_multifile_update() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
+        plugin.set_device_info(
+            "test_device_def".to_string(),
+            "Test Desktop".to_string(),
+            None,
+        );
+        plugin.initialize().await.unwrap();
 
-        let mut device = create_test_device();
         let packet = Packet::new(
             "cconnect.share.request.update",
             json!({
@@ -1023,7 +1018,7 @@ mod tests {
             }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Update packets don't create share records
         assert_eq!(plugin.share_count(), 0);
@@ -1089,10 +1084,12 @@ mod tests {
     #[tokio::test]
     async fn test_multiple_shares() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
-
-        let mut device = create_test_device();
+        plugin.set_device_info(
+            "test_device_multi".to_string(),
+            "Multi Share Device".to_string(),
+            None,
+        );
+        plugin.initialize().await.unwrap();
 
         // Share file
         let packet1 = Packet::new(
@@ -1100,18 +1097,18 @@ mod tests {
             json!({ "filename": "file1.txt" }),
         )
         .with_payload_size(100);
-        plugin.handle_packet(&packet1, &mut device).await.unwrap();
+        plugin.handle_packet(&packet1).await.unwrap();
 
         // Share text
         let packet2 = Packet::new("cconnect.share.request", json!({ "text": "Hello" }));
-        plugin.handle_packet(&packet2, &mut device).await.unwrap();
+        plugin.handle_packet(&packet2).await.unwrap();
 
         // Share URL
         let packet3 = Packet::new(
             "cconnect.share.request",
             json!({ "url": "https://example.com" }),
         );
-        plugin.handle_packet(&packet3, &mut device).await.unwrap();
+        plugin.handle_packet(&packet3).await.unwrap();
 
         assert_eq!(plugin.share_count(), 3);
 
@@ -1124,10 +1121,12 @@ mod tests {
     #[tokio::test]
     async fn test_ignore_invalid_share() {
         let mut plugin = SharePlugin::new();
-        let device = create_test_device();
-        plugin.init(&device).await.unwrap();
-
-        let mut device = create_test_device();
+        plugin.set_device_info(
+            "test_device_invalid".to_string(),
+            "Invalid Test Device".to_string(),
+            None,
+        );
+        plugin.initialize().await.unwrap();
 
         // Packet with no recognizable content
         let packet = Packet::new(
@@ -1135,10 +1134,9 @@ mod tests {
             json!({ "invalidField": "value" }),
         );
 
-        plugin.handle_packet(&packet, &mut device).await.unwrap();
+        plugin.handle_packet(&packet).await.unwrap();
 
         // Should not create a share record
         assert_eq!(plugin.share_count(), 0);
     }
-    */
 }
