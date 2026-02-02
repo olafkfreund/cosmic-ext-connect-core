@@ -146,7 +146,7 @@ impl H264Decoder {
             self.frames_decoded += 1;
 
             // Extract dimensions from decoded frame
-            let (width, height) = yuv.dimension_rgb();
+            let (width, height) = yuv.dimensions();
             self.width = Some(width as u32);
             self.height = Some(height as u32);
 
@@ -224,12 +224,12 @@ impl H264Decoder {
 
     /// Convert OpenH264 YUV output to VideoFrame
     fn yuv_to_frame(&self, yuv: DecodedYUV, timestamp_us: u64) -> Result<VideoFrame, DecoderError> {
-        let (width, height) = yuv.dimension_rgb();
+        let (width, height) = yuv.dimensions();
 
         // OpenH264 outputs I420 format
-        let y_stride = yuv.strides_yuv().0;
-        let u_stride = yuv.strides_yuv().1;
-        let v_stride = yuv.strides_yuv().2;
+        let y_stride = yuv.strides().0;
+        let u_stride = yuv.strides().1;
+        let v_stride = yuv.strides().2;
 
         let y_plane = yuv.y();
         let u_plane = yuv.u();
