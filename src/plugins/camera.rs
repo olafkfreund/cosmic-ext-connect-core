@@ -1132,7 +1132,7 @@ pub struct FrameReceiver {
     /// Configuration
     config: FrameReceiverConfig,
     /// Camera daemon for V4L2 output
-    daemon: crate::video::camera_daemon::CameraDaemon,
+    daemon: crate::video::CameraDaemon,
     /// Statistics
     stats: std::sync::Arc<std::sync::RwLock<StreamStats>>,
     /// Whether receiver is running
@@ -1174,8 +1174,7 @@ impl Default for FrameReceiverConfig {
 impl FrameReceiver {
     /// Create a new frame receiver
     pub fn new(config: FrameReceiverConfig, callback: Option<Box<dyn FrameReceiverCallback>>) -> Self {
-        use crate::video::camera_daemon::{CameraDaemon, CameraDaemonConfig};
-        use crate::video::frame::PixelFormat;
+        use crate::video::{CameraDaemon, CameraDaemonConfig, PixelFormat};
 
         let daemon_config = CameraDaemonConfig {
             device_path: config.device_path.clone(),

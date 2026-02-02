@@ -150,8 +150,8 @@ impl H264Decoder {
             self.width = Some(width as u32);
             self.height = Some(height as u32);
 
-            // Convert to VideoFrame
-            let frame = self.yuv_to_frame(yuv, timestamp_us)?;
+            // Convert to VideoFrame (using standalone function to avoid borrow conflict)
+            let frame = yuv_to_frame(yuv, timestamp_us);
             Ok(Some(frame))
         } else {
             // Need more data
@@ -222,62 +222,6 @@ impl H264Decoder {
         false
     }
 
-    /// Convert OpenH264 YUV output to VideoFrame
-    fn yuv_to_frame(&self, yuv: DecodedYUV, timestamp_us: u64) -> Result<VideoFrame, DecoderError> {
-        let (width, height) = yuv.dimensions();
-
-        // OpenH264 outputs I420 format
-        let y_stride = yuv.strides().0;
-        let u_stride = yuv.strides().1;
-        let v_stride = yuv.strides().2;
-
-        let y_plane = yuv.y();
-        let u_plane = yuv.u();
-        let v_plane = yuv.v();
-
-        // Calculate sizes
-        let y_size = width * height;
-        let uv_size = (width / 2) * (height / 2);
-
-        // Allocate output buffer
-        let mut data = Vec::with_capacity(y_size + uv_size * 2);
-
-        // Copy Y plane (with stride handling)
-        for row in 0..height {
-            let src_offset = row * y_stride;
-            let src_end = src_offset + width;
-            if src_end <= y_plane.len() {
-                data.extend_from_slice(&y_plane[src_offset..src_end]);
-            }
-        }
-
-        // Copy U plane
-        for row in 0..(height / 2) {
-            let src_offset = row * u_stride;
-            let src_end = src_offset + (width / 2);
-            if src_end <= u_plane.len() {
-                data.extend_from_slice(&u_plane[src_offset..src_end]);
-            }
-        }
-
-        // Copy V plane
-        for row in 0..(height / 2) {
-            let src_offset = row * v_stride;
-            let src_end = src_offset + (width / 2);
-            if src_end <= v_plane.len() {
-                data.extend_from_slice(&v_plane[src_offset..src_end]);
-            }
-        }
-
-        Ok(VideoFrame::from_data(
-            width as u32,
-            height as u32,
-            PixelFormat::I420,
-            timestamp_us,
-            data,
-        ))
-    }
-
     /// Reset decoder state
     ///
     /// Called when stream restarts or after errors.
@@ -304,6 +248,65 @@ impl Default for H264Decoder {
     fn default() -> Self {
         Self::new().expect("Failed to create H264 decoder")
     }
+}
+
+/// Convert OpenH264 YUV output to VideoFrame
+///
+/// This is a standalone function (not a method) to avoid borrow checker conflicts
+/// when the DecodedYUV holds a reference to the decoder's internal buffer.
+fn yuv_to_frame(yuv: DecodedYUV, timestamp_us: u64) -> VideoFrame {
+    let (width, height) = yuv.dimensions();
+
+    // OpenH264 outputs I420 format
+    let y_stride = yuv.strides().0;
+    let u_stride = yuv.strides().1;
+    let v_stride = yuv.strides().2;
+
+    let y_plane = yuv.y();
+    let u_plane = yuv.u();
+    let v_plane = yuv.v();
+
+    // Calculate sizes
+    let y_size = width * height;
+    let uv_size = (width / 2) * (height / 2);
+
+    // Allocate output buffer
+    let mut data = Vec::with_capacity(y_size + uv_size * 2);
+
+    // Copy Y plane (with stride handling)
+    for row in 0..height {
+        let src_offset = row * y_stride;
+        let src_end = src_offset + width;
+        if src_end <= y_plane.len() {
+            data.extend_from_slice(&y_plane[src_offset..src_end]);
+        }
+    }
+
+    // Copy U plane
+    for row in 0..(height / 2) {
+        let src_offset = row * u_stride;
+        let src_end = src_offset + (width / 2);
+        if src_end <= u_plane.len() {
+            data.extend_from_slice(&u_plane[src_offset..src_end]);
+        }
+    }
+
+    // Copy V plane
+    for row in 0..(height / 2) {
+        let src_offset = row * v_stride;
+        let src_end = src_offset + (width / 2);
+        if src_end <= v_plane.len() {
+            data.extend_from_slice(&v_plane[src_offset..src_end]);
+        }
+    }
+
+    VideoFrame::from_data(
+        width as u32,
+        height as u32,
+        PixelFormat::I420,
+        timestamp_us,
+        data,
+    )
 }
 
 #[cfg(test)]
