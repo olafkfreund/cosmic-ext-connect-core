@@ -4,6 +4,7 @@
 
 use crate::video::frame::{PixelFormat, VideoFrame};
 use openh264::decoder::{Decoder, DecodedYUV};
+use openh264::formats::YUVSource;
 use openh264::Error as OpenH264Error;
 use std::fmt;
 use tracing::{debug, trace, warn};

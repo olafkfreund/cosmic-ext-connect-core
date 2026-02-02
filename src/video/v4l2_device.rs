@@ -306,7 +306,7 @@ pub fn find_loopback_devices() -> Vec<PathBuf> {
 /// Check if a V4L2 device is a loopback device
 fn is_loopback_device(path: &PathBuf) -> bool {
     // Try to open and query capabilities
-    if let Ok(device) = Device::new(path.to_str().unwrap_or("")) {
+    if let Ok(device) = Device::with_path(path) {
         if let Ok(caps) = device.query_caps() {
             // v4l2loopback shows up as output-capable
             let has_output = caps.capabilities.contains(v4l::capability::Flags::VIDEO_OUTPUT);

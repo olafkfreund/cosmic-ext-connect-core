@@ -153,7 +153,10 @@ impl Plugin for PresenterPlugin {
 
 
     fn incoming_capabilities(&self) -> Vec<String> {
-        vec![PACKET_TYPE_PRESENTER.to_string()]
+        vec![
+            PACKET_TYPE_PRESENTER.to_string(),
+            "kdeconnect.presenter".to_string(),
+        ]
     }
 
     fn outgoing_capabilities(&self) -> Vec<String> {
@@ -179,15 +182,13 @@ impl Plugin for PresenterPlugin {
     }
 
     async fn handle_packet(&mut self, packet: &Packet) -> Result<()> {
-        match packet.packet_type.as_str() {
-            PACKET_TYPE_PRESENTER => {
-                debug!("Received presenter event");
-                self.handle_presenter_event(packet).await
-            }
-            _ => {
-                warn!("Unexpected packet type: {}", packet.packet_type);
-                Ok(())
-            }
+        // Use is_type() to support both cconnect.presenter and kdeconnect.presenter
+        if packet.is_type(PACKET_TYPE_PRESENTER) {
+            debug!("Received presenter event");
+            self.handle_presenter_event(packet).await
+        } else {
+            warn!("Unexpected packet type: {}", packet.packet_type);
+            Ok(())
         }
     }
 }
