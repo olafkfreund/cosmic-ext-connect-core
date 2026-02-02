@@ -26,6 +26,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use tracing::{debug, info, warn};
 use v4l::prelude::*;
+use v4l::video::Output;
 use v4l::FourCC;
 
 /// Error types for V4L2 operations
