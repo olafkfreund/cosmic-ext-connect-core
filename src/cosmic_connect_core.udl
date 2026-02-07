@@ -771,6 +771,81 @@ namespace cosmic_connect_core {
   /// * `body_json` - JSON string containing SFTP server info or error message
   [Throws=ProtocolError]
   FfiPacket create_sftp_packet(string body_json);
+
+  // ========================================================================
+  // Lock Plugin
+  // ========================================================================
+
+  /// Create a lock status packet
+  ///
+  /// Creates a packet containing the current screen lock state.
+  ///
+  /// # Arguments
+  ///
+  /// * `is_locked` - Whether the screen is currently locked
+  [Throws=ProtocolError]
+  FfiPacket create_lock_packet(boolean is_locked);
+
+  /// Create a lock request packet
+  ///
+  /// Creates a packet to request locking or unlocking the remote device's screen.
+  ///
+  /// # Arguments
+  ///
+  /// * `set_locked` - True to lock, false to unlock
+  [Throws=ProtocolError]
+  FfiPacket create_lock_request(boolean set_locked);
+
+  /// Create a lock status request packet
+  ///
+  /// Creates a packet to query the current lock state of the remote device.
+  [Throws=ProtocolError]
+  FfiPacket create_lock_status_request();
+
+  // ========================================================================
+  // Webcam Plugin
+  // ========================================================================
+
+  /// Create a webcam start request packet
+  ///
+  /// Requests the desktop to start streaming its webcam.
+  ///
+  /// # Arguments
+  ///
+  /// * `camera_id` - Optional camera device ID to stream
+  /// * `width` - Optional requested width
+  /// * `height` - Optional requested height
+  [Throws=ProtocolError]
+  FfiPacket create_webcam_start_request(
+    string? camera_id,
+    i32? width,
+    i32? height
+  );
+
+  /// Create a webcam stop request packet
+  [Throws=ProtocolError]
+  FfiPacket create_webcam_stop_request();
+
+  /// Create a webcam capability request packet
+  [Throws=ProtocolError]
+  FfiPacket create_webcam_capability_request();
+
+  /// Create a webcam status packet
+  ///
+  /// # Arguments
+  ///
+  /// * `streaming` - Whether the webcam is currently streaming
+  /// * `camera_id` - Optional camera device ID
+  [Throws=ProtocolError]
+  FfiPacket create_webcam_status(boolean streaming, string? camera_id);
+
+  /// Create a webcam capability announcement packet
+  ///
+  /// # Arguments
+  ///
+  /// * `cameras_json` - JSON string describing available cameras
+  [Throws=ProtocolError]
+  FfiPacket create_webcam_capability(string cameras_json);
 };
 
 // ==========================================================================

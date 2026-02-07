@@ -74,6 +74,9 @@ pub use ffi::{
     create_mousepad_request, create_mousepad_echo, create_mousepad_keyboardstate,
     create_digitizer_session, create_digitizer_event,
     create_sftp_packet,
+    create_lock_packet, create_lock_request, create_lock_status_request,
+    create_webcam_start_request, create_webcam_stop_request, create_webcam_capability_request,
+    create_webcam_status, create_webcam_capability,
 };
 
 // Re-export NotificationImage for UniFFI

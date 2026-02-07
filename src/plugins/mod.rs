@@ -37,6 +37,7 @@
 //!
 //! ### Utility Plugins
 //! - [`findmyphone`](findmyphone) - Find my phone
+//! - [`lock`](lock) - Lock/unlock device screen
 //!
 //! ## Example Usage
 //!
@@ -154,6 +155,7 @@ pub mod share;            // ✅  Phase 1 complete: Device dependencies removed 
 
 // Streaming plugins
 pub mod camera;           // ✅  Camera webcam streaming (Issue #99-#100)
+pub mod webcam;           // ✅  Webcam streaming (desktop → phone)
 
 // App continuity plugins
 pub mod open;             // ✅  Open content on remote devices (Issue #113)
@@ -200,6 +202,8 @@ pub mod open;             // ✅  Open content on remote devices (Issue #113)
 // - **Description**: Trigger phone ringtone for locating device
 // - **Capabilities**: `kdeconnect.findmyphone.request`
 // - **Notes**: Requires platform audio APIs
+
+pub mod lock;             // ✅ Lock/unlock device screen
 
 // Re-exports for convenience
 pub use r#trait::{Plugin, PluginMetadata};

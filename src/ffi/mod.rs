@@ -2157,6 +2157,105 @@ pub fn create_sftp_packet(body_json: String) -> Result<FfiPacket> {
 }
 
 // ==========================================================================
+// Lock Plugin
+// ==========================================================================
+
+/// Create a lock status packet
+///
+/// Creates a packet containing the current screen lock state.
+///
+/// # Arguments
+///
+/// * `is_locked` - Whether the screen is currently locked
+pub fn create_lock_packet(is_locked: bool) -> Result<FfiPacket> {
+    let packet = crate::plugins::lock::create_lock_packet(is_locked)?;
+    Ok(packet.into())
+}
+
+/// Create a lock request packet
+///
+/// Creates a packet to request locking or unlocking the remote device's screen.
+///
+/// # Arguments
+///
+/// * `set_locked` - True to lock, false to unlock
+pub fn create_lock_request(set_locked: bool) -> Result<FfiPacket> {
+    let packet = crate::plugins::lock::create_lock_request(set_locked)?;
+    Ok(packet.into())
+}
+
+/// Create a lock status request packet
+///
+/// Creates a packet to query the current lock state of the remote device.
+pub fn create_lock_status_request() -> Result<FfiPacket> {
+    let packet = crate::plugins::lock::create_lock_status_request()?;
+    Ok(packet.into())
+}
+
+// ==========================================================================
+// Webcam Plugin
+// ==========================================================================
+
+/// Create a webcam start request packet
+///
+/// Requests the desktop to start streaming its webcam.
+///
+/// # Arguments
+///
+/// * `camera_id` - Optional camera device ID to stream
+/// * `width` - Optional requested width
+/// * `height` - Optional requested height
+pub fn create_webcam_start_request(
+    camera_id: Option<String>,
+    width: Option<i32>,
+    height: Option<i32>,
+) -> Result<FfiPacket> {
+    let packet = crate::plugins::webcam::create_webcam_start_request(camera_id, width, height)?;
+    Ok(packet.into())
+}
+
+/// Create a webcam stop request packet
+///
+/// Requests the desktop to stop streaming its webcam.
+pub fn create_webcam_stop_request() -> Result<FfiPacket> {
+    let packet = crate::plugins::webcam::create_webcam_stop_request()?;
+    Ok(packet.into())
+}
+
+/// Create a webcam capability request packet
+///
+/// Requests the desktop to report its webcam capabilities.
+pub fn create_webcam_capability_request() -> Result<FfiPacket> {
+    let packet = crate::plugins::webcam::create_webcam_capability_request()?;
+    Ok(packet.into())
+}
+
+/// Create a webcam status packet
+///
+/// Reports webcam streaming state.
+///
+/// # Arguments
+///
+/// * `streaming` - Whether the webcam is currently streaming
+/// * `camera_id` - Optional camera device ID
+pub fn create_webcam_status(streaming: bool, camera_id: Option<String>) -> Result<FfiPacket> {
+    let packet = crate::plugins::webcam::create_webcam_status(streaming, camera_id)?;
+    Ok(packet.into())
+}
+
+/// Create a webcam capability announcement packet
+///
+/// Announces available webcams and supported resolutions.
+///
+/// # Arguments
+///
+/// * `cameras_json` - JSON string describing available cameras
+pub fn create_webcam_capability(cameras_json: String) -> Result<FfiPacket> {
+    let packet = crate::plugins::webcam::create_webcam_capability(cameras_json)?;
+    Ok(packet.into())
+}
+
+// ==========================================================================
 // Certificate Management
 // ==========================================================================
 
