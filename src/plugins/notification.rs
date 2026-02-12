@@ -91,7 +91,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::plugins::notification::{
+//! use cosmic_ext_connect_core::plugins::notification::{
 //!     NotificationPlugin, Notification
 //! };
 //!
@@ -159,7 +159,7 @@ impl NotificationLink {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::{NotificationLink, LinkType};
+    /// use cosmic_ext_connect_core::plugins::notification::{NotificationLink, LinkType};
     ///
     /// let link = NotificationLink::new(
     ///     "https://example.com",
@@ -201,7 +201,7 @@ impl NotificationLink {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::notification::Notification;
+/// use cosmic_ext_connect_core::plugins::notification::Notification;
 ///
 /// let notif = Notification {
 ///     id: "notif-123".to_string(),
@@ -328,7 +328,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let notif = Notification::new(
     ///     "notif-123",
@@ -383,7 +383,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.silent = Some("true".to_string());
@@ -398,7 +398,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.request_reply_id = Some("reply-uuid".to_string());
@@ -413,7 +413,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.actions = Some(vec!["Reply".to_string(), "Mark Read".to_string()]);
@@ -433,7 +433,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.rich_text = Some("<b>Bold</b> text".to_string());
@@ -449,7 +449,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.has_image = Some(true);
@@ -465,7 +465,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.has_video = Some(true);
@@ -481,7 +481,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::{Notification, NotificationLink, LinkType};
+    /// use cosmic_ext_connect_core::plugins::notification::{Notification, NotificationLink, LinkType};
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.links = Some(vec![
@@ -501,7 +501,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// notif.image_width = Some(1920);
@@ -520,7 +520,7 @@ impl Notification {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::Notification;
+    /// use cosmic_ext_connect_core::plugins::notification::Notification;
     ///
     /// let mut notif = Notification::new("1", "App", "Title", "Text", true);
     /// assert!(!notif.is_rich());
@@ -550,8 +550,8 @@ impl Notification {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::notification::NotificationPlugin;
-/// use cosmic_connect_core::plugins::Plugin;
+/// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
+/// use cosmic_ext_connect_core::plugins::Plugin;
 ///
 /// let plugin = NotificationPlugin::new();
 /// assert_eq!(plugin.name(), "notification");
@@ -574,7 +574,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// assert_eq!(plugin.notification_count(), 0);
@@ -591,7 +591,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// assert_eq!(plugin.notification_count(), 0);
@@ -605,7 +605,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// assert!(plugin.get_notification("notif-123").is_none());
@@ -619,7 +619,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// let notifications = plugin.get_all_notifications();
@@ -638,7 +638,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::{NotificationPlugin, Notification};
+    /// use cosmic_ext_connect_core::plugins::notification::{NotificationPlugin, Notification};
     ///
     /// let plugin = NotificationPlugin::new();
     /// let notif = Notification::new("123", "App", "Title", "Text", true);
@@ -656,7 +656,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_cancel_packet("notif-123");
@@ -676,7 +676,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_request_packet();
@@ -693,7 +693,7 @@ impl NotificationPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification::NotificationPlugin;
+    /// use cosmic_ext_connect_core::plugins::notification::NotificationPlugin;
     ///
     /// let plugin = NotificationPlugin::new();
     /// let packet = plugin.create_dismiss_packet("notif-123");

@@ -27,7 +27,7 @@ use std::collections::HashMap;
 /// # Examples
 ///
 /// ```
-/// use cosmic_connect_core::protocol::Packet;
+/// use cosmic_ext_connect_core::protocol::Packet;
 /// use serde_json::json;
 ///
 /// // Create identity packet
@@ -90,7 +90,7 @@ impl Packet {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::protocol::Packet;
+    /// use cosmic_ext_connect_core::protocol::Packet;
     /// use serde_json::json;
     ///
     /// let packet = Packet::new("cconnect.ping", json!({}));
@@ -131,7 +131,7 @@ impl Packet {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::protocol::Packet;
+    /// use cosmic_ext_connect_core::protocol::Packet;
     /// use serde_json::json;
     ///
     /// let packet = Packet::new("cconnect.ping", json!({}));
@@ -161,7 +161,7 @@ impl Packet {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::protocol::Packet;
+    /// use cosmic_ext_connect_core::protocol::Packet;
     ///
     /// let json_data = r#"{"id":123456789,"type":"cconnect.ping","body":{}}"#;
     /// let packet = Packet::from_bytes(json_data.as_bytes()).unwrap();

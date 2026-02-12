@@ -14,7 +14,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::battery::{BatteryPlugin, BatteryState};
+//! use cosmic_ext_connect_core::plugins::battery::{BatteryPlugin, BatteryState};
 //!
 //! # async fn example() {
 //! let mut plugin = BatteryPlugin::new();

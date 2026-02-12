@@ -11,8 +11,8 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::ping::PingPlugin;
-//! use cosmic_connect_core::plugins::Plugin;
+//! use cosmic_ext_connect_core::plugins::ping::PingPlugin;
+//! use cosmic_ext_connect_core::plugins::Plugin;
 //!
 //! # async fn example() {
 //! let mut plugin = PingPlugin::new();

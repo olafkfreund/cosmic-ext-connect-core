@@ -1,4 +1,4 @@
-// cosmic_connect_core.udl
+// cosmic_ext_connect_core.udl
 //
 // UniFFI Interface Definition for KDE Connect Protocol Implementation
 //
@@ -22,7 +22,7 @@
 // All fallible operations return Result<T, ProtocolError>
 // which maps to exceptions in Kotlin/Swift.
 
-namespace cosmic_connect_core {
+namespace cosmic_ext_connect_core {
   // ========================================================================
   // Initialization
   // ========================================================================

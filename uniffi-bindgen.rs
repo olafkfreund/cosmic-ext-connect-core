@@ -5,8 +5,8 @@ fn main() {
     // from the uniffi UDL file.
     //
     // Usage:
-    //   cargo run --bin uniffi-bindgen generate src/cosmic_connect_core.udl --language kotlin --out-dir ./bindings/kotlin
-    //   cargo run --bin uniffi-bindgen generate src/cosmic_connect_core.udl --language swift --out-dir ./bindings/swift
+    //   cargo run --bin uniffi-bindgen generate src/cosmic_ext_connect_core.udl --language kotlin --out-dir ./bindings/kotlin
+    //   cargo run --bin uniffi-bindgen generate src/cosmic_ext_connect_core.udl --language swift --out-dir ./bindings/swift
 
     uniffi::uniffi_bindgen_main()
 }

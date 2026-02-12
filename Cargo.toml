@@ -1,19 +1,19 @@
 [package]
-name = "cosmic-connect-core"
+name = "cosmic-ext-connect-core"
 version = "0.9.0"
 edition = "2021"
 rust-version = "1.70"
 authors = ["Olaf Kfreund <olafkfreund@gmail.com>"]
 license = "GPL-2.0-or-later OR GPL-3.0-or-later"
 description = "KDE Connect protocol implementation in Rust - shared library for COSMIC Connect"
-repository = "https://github.com/olafkfreund/cosmic-connect-core"
+repository = "https://github.com/olafkfreund/cosmic-ext-connect-core"
 readme = "README.md"
 keywords = ["kdeconnect", "protocol", "cosmic", "android"]
 categories = ["network-programming", "api-bindings"]
 
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]
-name = "cosmic_connect_core"
+name = "cosmic_ext_connect_core"
 
 [features]
 default = []

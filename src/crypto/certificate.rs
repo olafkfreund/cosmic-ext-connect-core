@@ -64,7 +64,7 @@ impl CertificateInfo {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::crypto::CertificateInfo;
+    /// use cosmic_ext_connect_core::crypto::CertificateInfo;
     ///
     /// let cert_info = CertificateInfo::generate("test_device_id").unwrap();
     /// println!("Fingerprint: {}", cert_info.fingerprint);
@@ -153,7 +153,7 @@ impl CertificateInfo {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::crypto::CertificateInfo;
+    /// use cosmic_ext_connect_core::crypto::CertificateInfo;
     ///
     /// let cert_info = CertificateInfo::generate("test").unwrap();
     /// let fingerprint = CertificateInfo::calculate_fingerprint(&cert_info.certificate);
@@ -181,7 +181,7 @@ impl CertificateInfo {
     /// # Examples
     ///
     /// ```no_run
-    /// use cosmic_connect_core::crypto::CertificateInfo;
+    /// use cosmic_ext_connect_core::crypto::CertificateInfo;
     ///
     /// let cert_info = CertificateInfo::generate("test").unwrap();
     /// cert_info.save_to_files("cert.pem", "key.pem").unwrap();
@@ -229,7 +229,7 @@ impl CertificateInfo {
     /// # Examples
     ///
     /// ```no_run
-    /// use cosmic_connect_core::crypto::CertificateInfo;
+    /// use cosmic_ext_connect_core::crypto::CertificateInfo;
     ///
     /// let cert_info = CertificateInfo::load_from_files("cert.pem", "key.pem").unwrap();
     /// println!("Loaded certificate for device: {}", cert_info.device_id);
@@ -300,7 +300,7 @@ impl CertificateInfo {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::crypto::CertificateInfo;
+    /// use cosmic_ext_connect_core::crypto::CertificateInfo;
     ///
     /// let generated = CertificateInfo::generate("test").unwrap();
     /// let loaded = CertificateInfo::from_der(

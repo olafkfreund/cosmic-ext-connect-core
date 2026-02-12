@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the `cosmic-connect-core` documentation. This directory contains comprehensive guides covering all aspects of the project.
+Welcome to the `cosmic-ext-connect-core` documentation. This directory contains comprehensive guides covering all aspects of the project.
 
 ## Documentation Index
 

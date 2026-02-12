@@ -13,7 +13,7 @@
 //! ### Async Service (Recommended)
 //!
 //! ```no_run
-//! use cosmic_connect_core::discovery::{DiscoveryService, DeviceInfo, DeviceType};
+//! use cosmic_ext_connect_core::discovery::{DiscoveryService, DeviceInfo, DeviceType};
 //!
 //! #[tokio::main]
 //! async fn main() {
@@ -36,7 +36,7 @@
 //! ### Synchronous Discovery (For Testing)
 //!
 //! ```no_run
-//! use cosmic_connect_core::discovery::{Discovery, DeviceInfo, DeviceType};
+//! use cosmic_ext_connect_core::discovery::{Discovery, DeviceInfo, DeviceType};
 //!
 //! let device_info = DeviceInfo::new("My Computer", DeviceType::Desktop, 1816);
 //! let discovery = Discovery::new(device_info).unwrap();
@@ -136,7 +136,7 @@ impl DeviceInfo {
     /// # Examples
     ///
     /// ```
-    /// use cosmic_connect_core::discovery::{DeviceInfo, DeviceType};
+    /// use cosmic_ext_connect_core::discovery::{DeviceInfo, DeviceType};
     ///
     /// let info = DeviceInfo::new("My Computer", DeviceType::Desktop, 1816);
     /// ```

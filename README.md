@@ -1,10 +1,10 @@
-# cosmic-connect-core
+# cosmic-ext-connect-core
 
 KDE Connect protocol implementation in Rust - shared library for COSMIC Connect Android and COSMIC Desktop.
 
 ## Overview
 
-`cosmic-connect-core` is a pure Rust implementation of the KDE Connect protocol v7, designed for cross-platform use via Foreign Function Interface (FFI). This library powers both the COSMIC Connect Android app (Kotlin) and COSMIC Desktop applet (Rust).
+`cosmic-ext-connect-core` is a pure Rust implementation of the KDE Connect protocol v7, designed for cross-platform use via Foreign Function Interface (FFI). This library powers both the COSMIC Connect Android app (Kotlin) and COSMIC Desktop applet (Rust).
 
 ### Key Features
 
@@ -18,7 +18,7 @@ KDE Connect protocol implementation in Rust - shared library for COSMIC Connect 
 ## Architecture
 
 ```
-cosmic-connect-core/
+cosmic-ext-connect-core/
 ├── src/
 │   ├── protocol/     # NetworkPacket, Device, Identity
 │   ├── network/      # Discovery (UDP), TCP/TLS transport
@@ -44,7 +44,7 @@ cosmic-connect-core/
 ### Rust
 
 ```rust
-use cosmic_connect_core::protocol::Packet;
+use cosmic_ext_connect_core::protocol::Packet;
 use serde_json::json;
 
 // Create a packet
@@ -58,7 +58,7 @@ assert_eq!(bytes.last(), Some(&b'\n'));
 ### Kotlin (Android)
 
 ```kotlin
-import uniffi.cosmic_connect_core.*
+import uniffi.cosmic_ext_connect_core.*
 
 // Discover devices
 val discovery = DiscoveryService.start()
@@ -113,10 +113,10 @@ cargo test
 cargo build --release
 
 # Generate uniffi bindings (Kotlin)
-cargo run --bin uniffi-bindgen generate src/cosmic_connect_core.udl --language kotlin --out-dir ./bindings/kotlin
+cargo run --bin uniffi-bindgen generate src/cosmic_ext_connect_core.udl --language kotlin --out-dir ./bindings/kotlin
 
 # Generate uniffi bindings (Swift)
-cargo run --bin uniffi-bindgen generate src/cosmic_connect_core.udl --language swift --out-dir ./bindings/swift
+cargo run --bin uniffi-bindgen generate src/cosmic_ext_connect_core.udl --language swift --out-dir ./bindings/swift
 ```
 
 ## Cross-Compilation for Android
@@ -139,7 +139,7 @@ cargo build --target aarch64-linux-android --release
 cargo test
 
 # Run specific module tests
-cargo test --package cosmic-connect-core --lib protocol::tests
+cargo test --package cosmic-ext-connect-core --lib protocol::tests
 
 # Run with logging
 RUST_LOG=debug cargo test

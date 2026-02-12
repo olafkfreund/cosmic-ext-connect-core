@@ -9,9 +9,9 @@
 mod camera_test_utils;
 
 use camera_test_utils::*;
-use cosmic_connect_core::plugins::camera::{CameraFrame, FrameType};
-use cosmic_connect_core::video::frame::{PixelFormat, VideoFrame};
-use cosmic_connect_core::video::h264_decoder::{DecoderError, H264Decoder};
+use cosmic_ext_connect_core::plugins::camera::{CameraFrame, FrameType};
+use cosmic_ext_connect_core::video::frame::{PixelFormat, VideoFrame};
+use cosmic_ext_connect_core::video::h264_decoder::{DecoderError, H264Decoder};
 use std::time::Duration;
 
 /// Test basic H.264 decoder initialization

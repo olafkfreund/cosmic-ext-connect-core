@@ -3,7 +3,7 @@
 //! UniFFI bindings for Kotlin (Android) and Swift (iOS).
 //!
 //! This module provides the FFI layer between Rust core and platform-specific code.
-//! All types and functions defined here correspond to the `cosmic_connect_core.udl`
+//! All types and functions defined here correspond to the `cosmic_ext_connect_core.udl`
 //! interface definition.
 //!
 //! ## Architecture
@@ -176,7 +176,7 @@ pub enum DiscoveryEvent {
 // Callbacks
 // ==========================================================================
 //
-// NOTE: Callback interfaces are defined in the UDL file (cosmic_connect_core.udl)
+// NOTE: Callback interfaces are defined in the UDL file (cosmic_ext_connect_core.udl)
 // and implemented here as Rust traits. The uniffi scaffolding will generate the
 // necessary glue code to connect Kotlin/Swift implementations to these traits.
 
@@ -217,7 +217,7 @@ pub fn initialize(log_level: String) -> Result<()> {
         .try_init()
         .map_err(|e| ProtocolError::Other(format!("Failed to initialize logging: {}", e)))?;
 
-    info!("cosmic-connect-core initialized with log level: {}", log_level);
+    info!("cosmic-ext-connect-core initialized with log level: {}", log_level);
     Ok(())
 }
 
@@ -368,11 +368,11 @@ pub fn create_multifile_update_packet(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_clipboard_packet;
+/// use cosmic_ext_connect_core::create_clipboard_packet;
 ///
 /// let packet = create_clipboard_packet("Hello World".to_string())?;
 /// // Send packet to peer device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_clipboard_packet(content: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -396,14 +396,14 @@ pub fn create_clipboard_packet(content: String) -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_clipboard_connect_packet;
+/// use cosmic_ext_connect_core::create_clipboard_connect_packet;
 /// use chrono::Utc;
 ///
 /// let content = "Hello World".to_string();
 /// let timestamp = Utc::now().timestamp_millis();
 /// let packet = create_clipboard_connect_packet(content, timestamp)?;
 /// // Send packet to newly connected peer device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Result<FfiPacket> {
     use serde_json::json;
@@ -431,11 +431,11 @@ pub fn create_clipboard_connect_packet(content: String, timestamp: i64) -> Resul
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_findmyphone_request;
+/// use cosmic_ext_connect_core::create_findmyphone_request;
 ///
 /// let packet = create_findmyphone_request()?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_findmyphone_request() -> Result<FfiPacket> {
     use serde_json::json;
@@ -466,11 +466,11 @@ pub fn create_findmyphone_request() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_runcommand_request_list;
+/// use cosmic_ext_connect_core::create_runcommand_request_list;
 ///
 /// let packet = create_runcommand_request_list()?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_runcommand_request_list() -> Result<FfiPacket> {
     use serde_json::json;
@@ -506,11 +506,11 @@ pub fn create_runcommand_request_list() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_runcommand_execute;
+/// use cosmic_ext_connect_core::create_runcommand_execute;
 ///
 /// let packet = create_runcommand_execute("backup".to_string())?;
 /// // Send packet to desktop to execute "backup" command...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_runcommand_execute(command_key: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -542,11 +542,11 @@ pub fn create_runcommand_execute(command_key: String) -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_runcommand_setup;
+/// use cosmic_ext_connect_core::create_runcommand_setup;
 ///
 /// let packet = create_runcommand_setup()?;
 /// // Send packet to desktop to open command setup UI...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_runcommand_setup() -> Result<FfiPacket> {
     use serde_json::json;
@@ -576,7 +576,7 @@ pub fn create_runcommand_setup() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_telephony_event;
+/// use cosmic_ext_connect_core::create_telephony_event;
 ///
 /// let packet = create_telephony_event(
 ///     "ringing".to_string(),
@@ -584,7 +584,7 @@ pub fn create_runcommand_setup() -> Result<FfiPacket> {
 ///     Some("John Doe".to_string())
 /// )?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_telephony_event(
     event: String,
@@ -616,11 +616,11 @@ pub fn create_telephony_event(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_mute_request;
+/// use cosmic_ext_connect_core::create_mute_request;
 ///
 /// let packet = create_mute_request()?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_mute_request() -> Result<FfiPacket> {
     use serde_json::json;
@@ -658,12 +658,12 @@ pub fn create_mute_request() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_sms_messages;
+/// use cosmic_ext_connect_core::create_sms_messages;
 ///
 /// let conversations_json = r#"{"conversations":[{"threadId":123,"messages":[]}]}"#;
 /// let packet = create_sms_messages(conversations_json.to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_sms_messages(conversations_json: String) -> Result<FfiPacket> {
     use serde_json::Value;
@@ -683,11 +683,11 @@ pub fn create_sms_messages(conversations_json: String) -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_conversations_request;
+/// use cosmic_ext_connect_core::create_conversations_request;
 ///
 /// let packet = create_conversations_request()?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_conversations_request() -> Result<FfiPacket> {
     use serde_json::json;
@@ -711,12 +711,12 @@ pub fn create_conversations_request() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_conversation_request;
+/// use cosmic_ext_connect_core::create_conversation_request;
 ///
 /// // Request latest 50 messages from thread 123
 /// let packet = create_conversation_request(123, None, Some(50))?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_conversation_request(
     thread_id: i64,
@@ -752,11 +752,11 @@ pub fn create_conversation_request(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_attachment_request;
+/// use cosmic_ext_connect_core::create_attachment_request;
 ///
 /// let packet = create_attachment_request(789, "abc123".to_string())?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_attachment_request(part_id: i64, unique_identifier: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -781,14 +781,14 @@ pub fn create_attachment_request(part_id: i64, unique_identifier: String) -> Res
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_send_sms_request;
+/// use cosmic_ext_connect_core::create_send_sms_request;
 ///
 /// let packet = create_send_sms_request(
 ///     "+1234567890".to_string(),
 ///     "Hello from desktop!".to_string()
 /// )?;
 /// // Send packet to Android device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_send_sms_request(phone_number: String, message_body: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -818,7 +818,7 @@ pub fn create_send_sms_request(phone_number: String, message_body: String) -> Re
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_battery_packet;
+/// use cosmic_ext_connect_core::create_battery_packet;
 ///
 /// // Device is charging at 85%
 /// let packet = create_battery_packet(true, 85, 0)?;
@@ -827,7 +827,7 @@ pub fn create_send_sms_request(phone_number: String, message_body: String) -> Re
 /// // Device not charging, low battery (12%)
 /// let low_battery = create_battery_packet(false, 12, 1)?;
 /// // Send packet to remote device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_battery_packet(
     is_charging: bool,
@@ -857,12 +857,12 @@ pub fn create_battery_packet(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_battery_request;
+/// use cosmic_ext_connect_core::create_battery_request;
 ///
 /// let packet = create_battery_request()?;
 /// // Send packet to Android device...
 /// // Android will respond with battery status
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_battery_request() -> Result<FfiPacket> {
     use serde_json::json;
@@ -890,7 +890,7 @@ pub fn create_battery_request() -> Result<FfiPacket> {
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_open_url_packet;
+/// use cosmic_ext_connect_core::create_open_url_packet;
 ///
 /// let packet = create_open_url_packet(
 ///     "req-001".to_string(),
@@ -898,7 +898,7 @@ pub fn create_battery_request() -> Result<FfiPacket> {
 ///     Some("Example Website".to_string()),
 /// )?;
 /// // Send packet to remote device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_open_url_packet(
     request_id: String,
@@ -938,7 +938,7 @@ pub fn create_open_url_packet(
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_open_file_packet;
+/// use cosmic_ext_connect_core::create_open_file_packet;
 ///
 /// let packet = create_open_file_packet(
 ///     "req-002".to_string(),
@@ -947,7 +947,7 @@ pub fn create_open_url_packet(
 ///     1048576,
 /// )?;
 /// // Send packet to remote device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_open_file_packet(
     request_id: String,
@@ -983,14 +983,14 @@ pub fn create_open_file_packet(
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_open_text_packet;
+/// use cosmic_ext_connect_core::create_open_text_packet;
 ///
 /// let packet = create_open_text_packet(
 ///     "req-003".to_string(),
 ///     "Hello from remote device!".to_string(),
 /// )?;
 /// // Send packet to remote device...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_open_text_packet(
     request_id: String,
@@ -1024,7 +1024,7 @@ pub fn create_open_text_packet(
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_open_response_packet;
+/// use cosmic_ext_connect_core::create_open_response_packet;
 ///
 /// // Success response
 /// let packet = create_open_response_packet(
@@ -1041,7 +1041,7 @@ pub fn create_open_text_packet(
 ///     Some("Unsupported file type".to_string()),
 ///     None,
 /// )?;
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_open_response_packet(
     request_id: String,
@@ -1083,7 +1083,7 @@ pub fn create_open_response_packet(
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_open_capability_packet;
+/// use cosmic_ext_connect_core::create_open_capability_packet;
 ///
 /// let packet = create_open_capability_packet(
 ///     vec!["http".to_string(), "https".to_string(), "mailto".to_string()],
@@ -1091,7 +1091,7 @@ pub fn create_open_response_packet(
 ///     vec!["text/*".to_string(), "image/*".to_string(), "application/pdf".to_string()],
 /// )?;
 /// // Send packet during capability negotiation...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_open_capability_packet(
     supported_schemes: Vec<String>,
@@ -1154,7 +1154,7 @@ pub fn create_open_capability_packet(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_notification_packet;
+/// use cosmic_ext_connect_core::create_notification_packet;
 /// use serde_json::json;
 ///
 /// let notification_json = json!({
@@ -1169,7 +1169,7 @@ pub fn create_open_capability_packet(
 ///
 /// let packet = create_notification_packet(notification_json)?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_notification_packet(notification_json: String) -> Result<FfiPacket> {
     use crate::plugins::notification::{Notification, NotificationPlugin};
@@ -1195,12 +1195,12 @@ pub fn create_notification_packet(notification_json: String) -> Result<FfiPacket
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_cancel_notification_packet;
+/// use cosmic_ext_connect_core::create_cancel_notification_packet;
 ///
 /// let packet = create_cancel_notification_packet("notif-123".to_string())?;
 /// // Send packet to desktop...
 /// // Desktop will remove the notification from its list
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_cancel_notification_packet(notification_id: String) -> Result<FfiPacket> {
     use crate::plugins::notification::NotificationPlugin;
@@ -1220,12 +1220,12 @@ pub fn create_cancel_notification_packet(notification_id: String) -> Result<FfiP
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_notification_request_packet;
+/// use cosmic_ext_connect_core::create_notification_request_packet;
 ///
 /// let packet = create_notification_request_packet()?;
 /// // Send packet to Android...
 /// // Android will respond with all current notifications
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_notification_request_packet() -> Result<FfiPacket> {
     use crate::plugins::notification::NotificationPlugin;
@@ -1247,12 +1247,12 @@ pub fn create_notification_request_packet() -> Result<FfiPacket> {
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_dismiss_notification_packet;
+/// use cosmic_ext_connect_core::create_dismiss_notification_packet;
 ///
 /// let packet = create_dismiss_notification_packet("notif-123".to_string())?;
 /// // Send packet to Android...
 /// // Android will dismiss the notification
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_dismiss_notification_packet(notification_id: String) -> Result<FfiPacket> {
     use crate::plugins::notification::NotificationPlugin;
@@ -1275,7 +1275,7 @@ pub fn create_dismiss_notification_packet(notification_id: String) -> Result<Ffi
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_notification_action_packet;
+/// use cosmic_ext_connect_core::create_notification_action_packet;
 ///
 /// let packet = create_notification_action_packet(
 ///     "notif-123".to_string(),
@@ -1283,7 +1283,7 @@ pub fn create_dismiss_notification_packet(notification_id: String) -> Result<Ffi
 /// )?;
 /// // Send packet to Android...
 /// // Android will trigger the "Reply" action
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_notification_action_packet(
     notification_key: String,
@@ -1312,7 +1312,7 @@ pub fn create_notification_action_packet(
 ///
 /// # Example
 /// ```rust,no_run
-/// use cosmic_connect_core::create_notification_reply_packet;
+/// use cosmic_ext_connect_core::create_notification_reply_packet;
 ///
 /// let packet = create_notification_reply_packet(
 ///     "uuid-reply-123".to_string(),
@@ -1320,7 +1320,7 @@ pub fn create_notification_action_packet(
 /// )?;
 /// // Send packet to Android...
 /// // Android will send the reply via RemoteInput
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_notification_reply_packet(
     reply_id: String,
@@ -1354,7 +1354,7 @@ pub fn create_notification_reply_packet(
 /// # Example
 ///
 /// ```rust,no_run
-/// use cosmic_connect_core::create_rich_notification_packet;
+/// use cosmic_ext_connect_core::create_rich_notification_packet;
 ///
 /// let json = r#"{
 ///     "id": "notif-123",
@@ -1372,7 +1372,7 @@ pub fn create_notification_reply_packet(
 /// }"#;
 ///
 /// let packet = create_rich_notification_packet(json.to_string())?;
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_rich_notification_packet(notification_json: String) -> Result<FfiPacket> {
     // Reuse the existing create_notification_packet function
@@ -1578,7 +1578,7 @@ pub fn load_certificate(cert_path: String, key_path: String) -> Result<FfiCertif
 /// ```ignore
 /// let packet = create_presenter_pointer(10.5, -5.2)?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_presenter_pointer(dx: f64, dy: f64) -> Result<FfiPacket> {
     use serde_json::json;
@@ -1605,7 +1605,7 @@ pub fn create_presenter_pointer(dx: f64, dy: f64) -> Result<FfiPacket> {
 /// ```ignore
 /// let packet = create_presenter_stop()?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_presenter_stop() -> Result<FfiPacket> {
     use serde_json::json;
@@ -1641,7 +1641,7 @@ pub fn create_presenter_stop() -> Result<FfiPacket> {
 /// ```ignore
 /// let packet = create_systemvolume_volume("Speaker".to_string(), 75)?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_systemvolume_volume(sink_name: String, volume: i32) -> Result<FfiPacket> {
     use serde_json::json;
@@ -1674,7 +1674,7 @@ pub fn create_systemvolume_volume(sink_name: String, volume: i32) -> Result<FfiP
 /// ```ignore
 /// let packet = create_systemvolume_mute("Headphones".to_string(), true)?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_systemvolume_mute(sink_name: String, muted: bool) -> Result<FfiPacket> {
     use serde_json::json;
@@ -1706,7 +1706,7 @@ pub fn create_systemvolume_mute(sink_name: String, muted: bool) -> Result<FfiPac
 /// ```ignore
 /// let packet = create_systemvolume_enable("HDMI Output".to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_systemvolume_enable(sink_name: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -1734,7 +1734,7 @@ pub fn create_systemvolume_enable(sink_name: String) -> Result<FfiPacket> {
 /// ```ignore
 /// let packet = create_systemvolume_request_sinks()?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_systemvolume_request_sinks() -> Result<FfiPacket> {
     use serde_json::json;
@@ -1771,7 +1771,7 @@ pub fn create_systemvolume_request_sinks() -> Result<FfiPacket> {
 /// let signal_data = r#"{"6": {"networkType": "4G", "signalStrength": 3}}"#;
 /// let packet = create_connectivity_report(signal_data.to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPacket> {
     use serde_json::json;
@@ -1821,7 +1821,7 @@ pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPa
 /// # Example
 ///
 /// ```no_run
-/// use cosmic_connect_core::create_contacts_response_uids;
+/// use cosmic_ext_connect_core::create_contacts_response_uids;
 /// use serde_json::json;
 ///
 /// let uids_data = json!({
@@ -1831,7 +1831,7 @@ pub fn create_connectivity_report(signal_strengths_json: String) -> Result<FfiPa
 /// });
 /// let packet = create_contacts_response_uids(uids_data.to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
     // Parse the UIDs/timestamps JSON
@@ -1870,7 +1870,7 @@ pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
 /// # Example
 ///
 /// ```no_run
-/// use cosmic_connect_core::create_contacts_response_vcards;
+/// use cosmic_ext_connect_core::create_contacts_response_vcards;
 /// use serde_json::json;
 ///
 /// let vcards_data = json!({
@@ -1879,7 +1879,7 @@ pub fn create_contacts_response_uids(uids_json: String) -> Result<FfiPacket> {
 /// });
 /// let packet = create_contacts_response_vcards(vcards_data.to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket> {
     // Parse the vCards JSON
@@ -1928,7 +1928,7 @@ pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket>
 /// # Example
 ///
 /// ```no_run
-/// use cosmic_connect_core::create_mpris_request;
+/// use cosmic_ext_connect_core::create_mpris_request;
 /// use serde_json::json;
 ///
 /// let request_data = json!({
@@ -1937,7 +1937,7 @@ pub fn create_contacts_response_vcards(vcards_json: String) -> Result<FfiPacket>
 /// });
 /// let packet = create_mpris_request(request_data.to_string())?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_mpris_request(body_json: String) -> Result<FfiPacket> {
     // Parse the request body JSON
@@ -2029,12 +2029,12 @@ pub fn create_mousepad_echo(body_json: String) -> Result<FfiPacket> {
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::create_mousepad_keyboardstate;
+/// use cosmic_ext_connect_core::create_mousepad_keyboardstate;
 ///
 /// // Notify desktop that keyboard is now visible
 /// let packet = create_mousepad_keyboardstate(true)?;
 /// // Send packet to desktop...
-/// # Ok::<(), cosmic_connect_core::error::ProtocolError>(())
+/// # Ok::<(), cosmic_ext_connect_core::error::ProtocolError>(())
 /// ```
 pub fn create_mousepad_keyboardstate(state: bool) -> Result<FfiPacket> {
     use serde_json::json;

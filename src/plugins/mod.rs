@@ -4,7 +4,7 @@
 //!
 //! ## Architecture
 //!
-//! The plugin system in `cosmic-connect-core` provides a clean separation between:
+//! The plugin system in `cosmic-ext-connect-core` provides a clean separation between:
 //! - **Protocol logic** (in Rust core) - Packet parsing, state management
 //! - **Platform integration** (Android/Desktop) - UI, system APIs, permissions
 //!
@@ -42,11 +42,11 @@
 //! ## Example Usage
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::{PluginManager, ping::PingPlugin, battery::BatteryPlugin};
-//! use cosmic_connect_core::protocol::Packet;
+//! use cosmic_ext_connect_core::plugins::{PluginManager, ping::PingPlugin, battery::BatteryPlugin};
+//! use cosmic_ext_connect_core::protocol::Packet;
 //! use serde_json::json;
 //!
-//! # async fn example() -> cosmic_connect_core::error::Result<()> {
+//! # async fn example() -> cosmic_ext_connect_core::error::Result<()> {
 //! let mut manager = PluginManager::new();
 //!
 //! // Register plugins
@@ -73,9 +73,9 @@
 //! To create a custom plugin, implement the [`Plugin`](trait@Plugin) trait:
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::Plugin;
-//! use cosmic_connect_core::protocol::Packet;
-//! use cosmic_connect_core::error::Result;
+//! use cosmic_ext_connect_core::plugins::Plugin;
+//! use cosmic_ext_connect_core::protocol::Packet;
+//! use cosmic_ext_connect_core::error::Result;
 //! use async_trait::async_trait;
 //!
 //! struct MyPlugin {

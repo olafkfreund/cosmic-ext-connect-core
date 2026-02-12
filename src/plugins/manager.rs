@@ -13,11 +13,11 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::PluginManager;
-//! use cosmic_connect_core::protocol::Packet;
+//! use cosmic_ext_connect_core::plugins::PluginManager;
+//! use cosmic_ext_connect_core::protocol::Packet;
 //! use serde_json::json;
 //!
-//! # async fn example() -> cosmic_connect_core::error::Result<()> {
+//! # async fn example() -> cosmic_ext_connect_core::error::Result<()> {
 //! let mut manager = PluginManager::new();
 //!
 //! // Register plugins

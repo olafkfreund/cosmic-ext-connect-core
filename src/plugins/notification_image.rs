@@ -13,7 +13,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::notification_image::NotificationImage;
+//! use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
 //!
 //! // Create from RGBA data
 //! let rgba_data = vec![255u8; 32 * 32 * 4]; // 32x32 red image
@@ -63,7 +63,7 @@ pub enum ImageError {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+/// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
 ///
 /// let rgba_data = vec![255u8; 16 * 16 * 4];
 /// let image = NotificationImage::from_rgba(16, 16, rgba_data);
@@ -113,7 +113,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let data = vec![255u8; 10 * 10 * 4]; // 10x10 white image
     /// let image = NotificationImage::from_rgba(10, 10, data);
@@ -147,7 +147,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let rgba_data = vec![255u8; 8 * 8 * 4];
     /// let image = NotificationImage::from_rgba(8, 8, rgba_data);
@@ -186,7 +186,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let png_bytes = std::fs::read("icon.png").unwrap();
     /// let image = NotificationImage::from_png_bytes(&png_bytes).unwrap();
@@ -216,7 +216,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust,ignore
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let jpeg_bytes = std::fs::read("photo.jpg").unwrap();
     /// let image = NotificationImage::from_jpeg_bytes(&jpeg_bytes).unwrap();
@@ -246,7 +246,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let data = vec![255u8; 100 * 100 * 4]; // 100x100 image
     /// let image = NotificationImage::from_rgba(100, 100, data);
@@ -291,7 +291,7 @@ impl NotificationImage {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::notification_image::NotificationImage;
+    /// use cosmic_ext_connect_core::plugins::notification_image::NotificationImage;
     ///
     /// let data = vec![255u8; 20 * 20 * 4];
     /// let image = NotificationImage::from_rgba(20, 20, data);

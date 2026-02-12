@@ -1,4 +1,4 @@
-//! Error types for cosmic-connect-core
+//! Error types for cosmic-ext-connect-core
 
 use std::io;
 use thiserror::Error;

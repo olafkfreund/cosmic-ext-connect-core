@@ -3,10 +3,10 @@
 //! Tests packet serialization, deserialization, and FFI bindings for the
 //! Open plugin which enables opening URLs, files, and text on remote devices.
 
-use cosmic_connect_core::plugins::open::{
+use cosmic_ext_connect_core::plugins::open::{
     OpenCapability, OpenContentType, OpenRequest, OpenResponse,
 };
-use cosmic_connect_core::{
+use cosmic_ext_connect_core::{
     create_open_capability_packet, create_open_file_packet, create_open_response_packet,
     create_open_text_packet, create_open_url_packet,
 };

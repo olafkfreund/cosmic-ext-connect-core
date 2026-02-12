@@ -2,7 +2,7 @@
 
 ## Overview
 
-`cosmic-connect-core` uses [UniFFI](https://mozilla.github.io/uniffi-rs/) to generate Foreign Function Interface (FFI) bindings for Kotlin (Android) and Swift (iOS). This guide covers FFI architecture, type mappings, and cross-platform development.
+`cosmic-ext-connect-core` uses [UniFFI](https://mozilla.github.io/uniffi-rs/) to generate Foreign Function Interface (FFI) bindings for Kotlin (Android) and Swift (iOS). This guide covers FFI architecture, type mappings, and cross-platform development.
 
 ## UniFFI Architecture
 
@@ -10,7 +10,7 @@
 
 ```
 ┌─────────────────────────────────────┐
-│   cosmic_connect_core.udl           │
+│   cosmic_ext_connect_core.udl           │
 │   (Interface Definition)            │
 └─────────────────┬───────────────────┘
                   │
@@ -29,7 +29,7 @@
                   ↓
 ┌─────────────────────────────────────┐
 │   Compiled Rust Library             │
-│   libcosmic_connect_core.so/.dylib  │
+│   libcosmic_ext_connect_core.so/.dylib  │
 └─────────────────┬───────────────────┘
                   │
                   ↓
@@ -47,7 +47,7 @@
 
 ### Key Files
 
-- **`src/cosmic_connect_core.udl`**: Interface definition (hand-written)
+- **`src/cosmic_ext_connect_core.udl`**: Interface definition (hand-written)
 - **`build.rs`**: Build script that generates scaffolding
 - **`src/lib.rs`**: Includes generated scaffolding via macro
 - **`src/ffi/mod.rs`**: FFI-specific Rust implementations
@@ -57,7 +57,7 @@
 ### Namespace Declaration
 
 ```
-namespace cosmic_connect_core {
+namespace cosmic_ext_connect_core {
     // Top-level functions go here
     void initialize(string log_level);
     string get_version();
@@ -303,7 +303,7 @@ fn notify_device_found(callback: &dyn DiscoveryCallback, device: DeviceInfo) {
 #### Using Top-Level Functions
 
 ```kotlin
-import uniffi.cosmic_connect_core.*
+import uniffi.cosmic_ext_connect_core.*
 
 // Initialize library
 CosmicConnectCore.initialize("info")
@@ -383,7 +383,7 @@ try {
 #### Using Top-Level Functions
 
 ```swift
-import cosmic_connect_core
+import cosmic_ext_connect_core
 
 // Initialize library
 try? initialize(logLevel: "info")
@@ -464,12 +464,12 @@ do {
 ```bash
 # Generate Kotlin bindings
 cargo run --bin uniffi-bindgen generate \
-    src/cosmic_connect_core.udl \
+    src/cosmic_ext_connect_core.udl \
     --language kotlin \
     --out-dir ./bindings/kotlin
 
 # Output files:
-# - bindings/kotlin/uniffi/cosmic_connect_core/cosmic_connect_core.kt
+# - bindings/kotlin/uniffi/cosmic_ext_connect_core/cosmic_ext_connect_core.kt
 ```
 
 ### For Swift (iOS)
@@ -477,14 +477,14 @@ cargo run --bin uniffi-bindgen generate \
 ```bash
 # Generate Swift bindings
 cargo run --bin uniffi-bindgen generate \
-    src/cosmic_connect_core.udl \
+    src/cosmic_ext_connect_core.udl \
     --language swift \
     --out-dir ./bindings/swift
 
 # Output files:
-# - bindings/swift/cosmic_connect_core.swift
-# - bindings/swift/cosmic_connect_coreFFI.h
-# - bindings/swift/cosmic_connect_coreFFI.modulemap
+# - bindings/swift/cosmic_ext_connect_core.swift
+# - bindings/swift/cosmic_ext_connect_coreFFI.h
+# - bindings/swift/cosmic_ext_connect_coreFFI.modulemap
 ```
 
 ### Integrating into Projects
@@ -503,25 +503,25 @@ cargo build --target x86_64-linux-android --release
 ```
 android/app/src/main/jniLibs/
 ├── arm64-v8a/
-│   └── libcosmic_connect_core.so
+│   └── libcosmic_ext_connect_core.so
 ├── armeabi-v7a/
-│   └── libcosmic_connect_core.so
+│   └── libcosmic_ext_connect_core.so
 ├── x86/
-│   └── libcosmic_connect_core.so
+│   └── libcosmic_ext_connect_core.so
 └── x86_64/
-    └── libcosmic_connect_core.so
+    └── libcosmic_ext_connect_core.so
 ```
 
 3. Copy Kotlin bindings:
 ```
-android/app/src/main/kotlin/uniffi/cosmic_connect_core/
-└── cosmic_connect_core.kt
+android/app/src/main/kotlin/uniffi/cosmic_ext_connect_core/
+└── cosmic_ext_connect_core.kt
 ```
 
 4. Load library in Kotlin:
 ```kotlin
 init {
-    System.loadLibrary("cosmic_connect_core")
+    System.loadLibrary("cosmic_ext_connect_core")
 }
 ```
 
@@ -536,8 +536,8 @@ cargo build --target x86_64-apple-ios --release
 2. Create XCFramework:
 ```bash
 xcodebuild -create-xcframework \
-    -library target/aarch64-apple-ios/release/libcosmic_connect_core.a \
-    -library target/x86_64-apple-ios/release/libcosmic_connect_core.a \
+    -library target/aarch64-apple-ios/release/libcosmic_ext_connect_core.a \
+    -library target/x86_64-apple-ios/release/libcosmic_ext_connect_core.a \
     -output CosmicConnectCore.xcframework
 ```
 

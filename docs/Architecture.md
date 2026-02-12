@@ -2,7 +2,7 @@
 
 ## Overview
 
-`cosmic-connect-core` is a layered Rust library implementing the KDE Connect protocol v7. The architecture is designed for cross-platform use via Foreign Function Interface (FFI), with clear separation between protocol logic (Rust core) and platform-specific implementation (Kotlin/Swift).
+`cosmic-ext-connect-core` is a layered Rust library implementing the KDE Connect protocol v7. The architecture is designed for cross-platform use via Foreign Function Interface (FFI), with clear separation between protocol logic (Rust core) and platform-specific implementation (Kotlin/Swift).
 
 ## Design Principles
 
@@ -160,7 +160,7 @@ Constructor → Registration → Initialize → [Handle Packets] → Shutdown
 **Purpose:** Cross-language interface
 
 **Key Components:**
-- UDL definitions in `cosmic_connect_core.udl`
+- UDL definitions in `cosmic_ext_connect_core.udl`
 - Type conversions (Rust ↔ Kotlin/Swift)
 - Callback interfaces for platform events
 - Top-level functions for library operations
@@ -179,7 +179,7 @@ Result<T, E>      [Throws=E]       throws           throws
 
 **Build Process:**
 1. `build.rs` runs during compilation
-2. Reads `cosmic_connect_core.udl`
+2. Reads `cosmic_ext_connect_core.udl`
 3. Generates Rust scaffolding code
 4. Includes scaffolding via macro
 5. Platform bindings generated separately

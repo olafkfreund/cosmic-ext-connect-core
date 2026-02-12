@@ -6,7 +6,7 @@
 //! ## Architecture
 //!
 //! ```text
-//! Android Camera → H.264 Frames → cosmic-connect-core → H.264 Decoder → V4L2 Loopback
+//! Android Camera → H.264 Frames → cosmic-ext-connect-core → H.264 Decoder → V4L2 Loopback
 //!                                                                              ↓
 //!                                                           Any V4L2 application
 //!                                                           (Zoom, OBS, etc.)
@@ -15,7 +15,7 @@
 //! ## Usage
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::video::{CameraDaemon, CameraDaemonConfig};
+//! use cosmic_ext_connect_core::video::{CameraDaemon, CameraDaemonConfig};
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! // Create and start the camera daemon
@@ -50,7 +50,7 @@
 //!
 //! This module requires the `video` feature:
 //! ```toml
-//! cosmic-connect-core = { version = "0.1", features = ["video"] }
+//! cosmic-ext-connect-core = { version = "0.1", features = ["video"] }
 //! ```
 
 mod frame;

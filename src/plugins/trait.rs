@@ -4,7 +4,7 @@
 //!
 //! ## Plugin Architecture
 //!
-//! Plugins in `cosmic-connect-core` handle:
+//! Plugins in `cosmic-ext-connect-core` handle:
 //! - Protocol logic (packet parsing/generation)
 //! - State management
 //! - Business logic
@@ -17,9 +17,9 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::Plugin;
-//! use cosmic_connect_core::protocol::Packet;
-//! use cosmic_connect_core::error::Result;
+//! use cosmic_ext_connect_core::plugins::Plugin;
+//! use cosmic_ext_connect_core::protocol::Packet;
+//! use cosmic_ext_connect_core::error::Result;
 //! use async_trait::async_trait;
 //!
 //! struct MyPlugin {

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers testing strategies, practices, and tools for `cosmic-connect-core`. Comprehensive testing ensures protocol compliance, reliability, and cross-platform compatibility.
+This guide covers testing strategies, practices, and tools for `cosmic-ext-connect-core`. Comprehensive testing ensures protocol compliance, reliability, and cross-platform compatibility.
 
 ## Testing Philosophy
 
@@ -261,7 +261,7 @@ proptest! {
 ```rust
 // tests/integration/discovery_test.rs
 
-use cosmic_connect_core::discovery::{DeviceInfo, DeviceType, Discovery};
+use cosmic_ext_connect_core::discovery::{DeviceInfo, DeviceType, Discovery};
 use std::time::Duration;
 use tokio::time::timeout;
 
@@ -294,8 +294,8 @@ async fn test_discovery_bidirectional() {
 ```rust
 // tests/integration/plugin_routing_test.rs
 
-use cosmic_connect_core::plugins::{PluginManager, PingPlugin};
-use cosmic_connect_core::protocol::Packet;
+use cosmic_ext_connect_core::plugins::{PluginManager, PingPlugin};
+use cosmic_ext_connect_core::protocol::Packet;
 use serde_json::json;
 
 #[tokio::test]
@@ -490,7 +490,7 @@ async fn test_with_mock_plugin() {
 // benches/packet_benchmark.rs
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use cosmic_connect_core::protocol::Packet;
+use cosmic_ext_connect_core::protocol::Packet;
 use serde_json::json;
 
 fn benchmark_packet_serialization(c: &mut Criterion) {
@@ -767,7 +767,7 @@ cargo test
 cargo test test_packet_serialization
 
 # Run tests in specific module
-cargo test --package cosmic-connect-core --lib protocol::tests
+cargo test --package cosmic-ext-connect-core --lib protocol::tests
 
 # Run with output
 cargo test -- --nocapture

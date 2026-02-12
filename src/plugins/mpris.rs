@@ -179,8 +179,8 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::plugins::mpris::*;
-//! use cosmic_connect_core::{Plugin, PluginManager};
+//! use cosmic_ext_connect_core::plugins::mpris::*;
+//! use cosmic_ext_connect_core::{Plugin, PluginManager};
 //!
 //! // Create and register plugin
 //! let mut manager = PluginManager::new();
@@ -423,8 +423,8 @@ pub struct PlayerState {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::mpris::MprisPlugin;
-/// use cosmic_connect_core::Plugin;
+/// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
+/// use cosmic_ext_connect_core::Plugin;
 ///
 /// let plugin = MprisPlugin::new();
 /// assert_eq!(plugin.name(), "mpris");
@@ -447,7 +447,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// ```
@@ -474,7 +474,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_player_list_packet(vec![
@@ -510,7 +510,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::*;
+    /// use cosmic_ext_connect_core::plugins::mpris::*;
     ///
     /// let plugin = MprisPlugin::new();
     /// let status = PlayerStatus {
@@ -579,7 +579,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_request_player_list_packet();
@@ -607,7 +607,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_request_now_playing_packet("spotify".to_string());
@@ -639,7 +639,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::*;
+    /// use cosmic_ext_connect_core::plugins::mpris::*;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_control_packet("vlc".to_string(), PlaybackAction::PlayPause);
@@ -671,7 +671,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// // Seek forward 5 seconds
@@ -704,7 +704,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// // Set position to 1 minute
@@ -737,7 +737,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_set_volume_packet("vlc".to_string(), 50);
@@ -769,7 +769,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::*;
+    /// use cosmic_ext_connect_core::plugins::mpris::*;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_set_loop_status_packet("spotify".to_string(), LoopStatus::Playlist);
@@ -801,7 +801,7 @@ impl MprisPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let packet = plugin.create_set_shuffle_packet("vlc".to_string(), true);
@@ -823,7 +823,7 @@ impl MprisPlugin {
     ///
     /// ```rust,no_run
     /// # async fn example() {
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// let players = plugin.get_player_list().await;
@@ -842,7 +842,7 @@ impl MprisPlugin {
     ///
     /// ```rust,no_run
     /// # async fn example() {
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// if let Some(state) = plugin.get_player_state("spotify").await {
@@ -867,7 +867,7 @@ impl MprisPlugin {
     ///
     /// ```rust,no_run
     /// # async fn example() {
-    /// use cosmic_connect_core::plugins::mpris::MprisPlugin;
+    /// use cosmic_ext_connect_core::plugins::mpris::MprisPlugin;
     ///
     /// let plugin = MprisPlugin::new();
     /// plugin.remove_player("vlc").await;

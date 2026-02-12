@@ -100,7 +100,7 @@ impl PresenterPlugin {
 
             // Laser pointer visualization implementation plan:
             //
-            // The presenter plugin in cosmic-connect-core only handles protocol-level
+            // The presenter plugin in cosmic-ext-connect-core only handles protocol-level
             // logic (receiving and parsing presenter events). Visual feedback must be
             // implemented in the COSMIC Desktop applet using COSMIC compositor APIs.
             //

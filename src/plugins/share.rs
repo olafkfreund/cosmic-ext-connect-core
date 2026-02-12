@@ -92,8 +92,8 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::plugins::share::*;
-//! use cosmic_connect_core::{Plugin, PluginManager};
+//! use cosmic_ext_connect_core::plugins::share::*;
+//! use cosmic_ext_connect_core::{Plugin, PluginManager};
 //!
 //! // Create and register plugin
 //! let mut manager = PluginManager::new();
@@ -154,7 +154,7 @@ use super::Plugin;
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::share::FileShareInfo;
+/// use cosmic_ext_connect_core::plugins::share::FileShareInfo;
 ///
 /// let info = FileShareInfo {
 ///     filename: "photo.jpg".to_string(),
@@ -189,7 +189,7 @@ pub struct FileShareInfo {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::share::MultiFileInfo;
+/// use cosmic_ext_connect_core::plugins::share::MultiFileInfo;
 ///
 /// let info = MultiFileInfo {
 ///     number_of_files: 10,
@@ -260,8 +260,8 @@ pub struct ShareRecord {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::share::SharePlugin;
-/// use cosmic_connect_core::plugins::Plugin;
+/// use cosmic_ext_connect_core::plugins::share::SharePlugin;
+/// use cosmic_ext_connect_core::plugins::Plugin;
 ///
 /// let plugin = SharePlugin::new();
 /// assert_eq!(plugin.name(), "share");
@@ -288,7 +288,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::SharePlugin;
+    /// use cosmic_ext_connect_core::plugins::share::SharePlugin;
     ///
     /// let plugin = SharePlugin::new();
     /// assert_eq!(plugin.share_count(), 0);
@@ -334,7 +334,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::{SharePlugin, FileShareInfo};
+    /// use cosmic_ext_connect_core::plugins::share::{SharePlugin, FileShareInfo};
     ///
     /// let plugin = SharePlugin::new();
     /// let file_info = FileShareInfo {
@@ -389,7 +389,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::SharePlugin;
+    /// use cosmic_ext_connect_core::plugins::share::SharePlugin;
     ///
     /// let plugin = SharePlugin::new();
     /// let packet = plugin.create_text_packet("Hello, World!".to_string());
@@ -419,7 +419,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::SharePlugin;
+    /// use cosmic_ext_connect_core::plugins::share::SharePlugin;
     ///
     /// let plugin = SharePlugin::new();
     /// let packet = plugin.create_url_packet("https://rust-lang.org".to_string());
@@ -450,7 +450,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::{SharePlugin, MultiFileInfo};
+    /// use cosmic_ext_connect_core::plugins::share::{SharePlugin, MultiFileInfo};
     ///
     /// let plugin = SharePlugin::new();
     /// let info = MultiFileInfo {
@@ -470,7 +470,7 @@ impl SharePlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::share::SharePlugin;
+    /// use cosmic_ext_connect_core::plugins::share::SharePlugin;
     ///
     /// let plugin = SharePlugin::new();
     /// assert_eq!(plugin.share_count(), 0);
@@ -488,7 +488,7 @@ impl SharePlugin {
     ///
     /// ```rust,no_run
     /// # async fn example() {
-    /// use cosmic_connect_core::plugins::share::SharePlugin;
+    /// use cosmic_ext_connect_core::plugins::share::SharePlugin;
     ///
     /// let plugin = SharePlugin::new();
     /// let shares = plugin.get_all_shares().await;
@@ -604,7 +604,7 @@ impl SharePlugin {
 
                             // FUTURE WORK (Issue #53 Phase 2): Payload transfer not implemented in core library
                             //
-                            // The cosmic-connect-core library is designed as a minimal protocol
+                            // The cosmic-ext-connect-core library is designed as a minimal protocol
                             // implementation without platform-specific code. Payload transfers
                             // require platform-specific networking and file I/O.
                             //
@@ -781,7 +781,7 @@ impl Plugin for SharePlugin {
 
 // NOTE: PluginFactory trait not used in core library
 //
-// The cosmic-connect-core library uses a simpler Plugin trait only,
+// The cosmic-ext-connect-core library uses a simpler Plugin trait only,
 // without the factory pattern. The PluginFactory trait is part of
 // cosmic-connect-protocol for more complex plugin management.
 //

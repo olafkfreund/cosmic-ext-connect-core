@@ -18,7 +18,7 @@
 //! ## Example
 //!
 //! ```rust
-//! use cosmic_connect_core::plugins::camera::{CameraPlugin, CameraStart, Resolution};
+//! use cosmic_ext_connect_core::plugins::camera::{CameraPlugin, CameraStart, Resolution};
 //!
 //! # fn example() {
 //! let plugin = CameraPlugin::new();
@@ -1113,7 +1113,7 @@ pub trait FrameReceiverCallback: Send + Sync {
 /// ## Usage
 ///
 /// ```rust,ignore
-/// use cosmic_connect_core::plugins::camera::{FrameReceiver, FrameReceiverConfig};
+/// use cosmic_ext_connect_core::plugins::camera::{FrameReceiver, FrameReceiverConfig};
 ///
 /// let config = FrameReceiverConfig::default();
 /// let receiver = FrameReceiver::new(config, callback);

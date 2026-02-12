@@ -20,7 +20,7 @@
 //! ## Usage
 //!
 //! ```rust,no_run
-//! use cosmic_connect_core::network::transport::{Transport, TransportAddress};
+//! use cosmic_ext_connect_core::network::transport::{Transport, TransportAddress};
 //!
 //! async fn send_packet(transport: &mut Box<dyn Transport>) {
 //!     // Get capabilities

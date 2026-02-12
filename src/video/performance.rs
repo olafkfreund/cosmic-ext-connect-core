@@ -15,7 +15,7 @@
 //! ## Usage
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::video::performance::PerformanceMonitor;
+//! use cosmic_ext_connect_core::video::performance::PerformanceMonitor;
 //!
 //! let monitor = PerformanceMonitor::new();
 //! monitor.start();

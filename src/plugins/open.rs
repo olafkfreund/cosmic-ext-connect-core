@@ -78,7 +78,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::plugins::open::*;
+//! use cosmic_ext_connect_core::plugins::open::*;
 //!
 //! // Request to open a URL on remote device
 //! let request = OpenRequest {
@@ -131,7 +131,7 @@ impl Default for OpenContentType {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::open::OpenCapability;
+/// use cosmic_ext_connect_core::plugins::open::OpenCapability;
 ///
 /// let capability = OpenCapability {
 ///     supported_schemes: vec!["http".to_string(), "https".to_string()],
@@ -178,7 +178,7 @@ impl Default for OpenCapability {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::open::{OpenRequest, OpenContentType};
+/// use cosmic_ext_connect_core::plugins::open::{OpenRequest, OpenContentType};
 ///
 /// let request = OpenRequest {
 ///     request_id: "req-001".to_string(),
@@ -227,7 +227,7 @@ impl OpenRequest {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::open::OpenRequest;
+    /// use cosmic_ext_connect_core::plugins::open::OpenRequest;
     ///
     /// let request = OpenRequest::new_url(
     ///     "req-001".to_string(),
@@ -252,7 +252,7 @@ impl OpenRequest {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::open::OpenRequest;
+    /// use cosmic_ext_connect_core::plugins::open::OpenRequest;
     ///
     /// let request = OpenRequest::new_file(
     ///     "req-002".to_string(),
@@ -283,7 +283,7 @@ impl OpenRequest {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::open::OpenRequest;
+    /// use cosmic_ext_connect_core::plugins::open::OpenRequest;
     ///
     /// let request = OpenRequest::new_text(
     ///     "req-003".to_string(),
@@ -308,7 +308,7 @@ impl OpenRequest {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::open::OpenResponse;
+/// use cosmic_ext_connect_core::plugins::open::OpenResponse;
 ///
 /// let response = OpenResponse {
 ///     request_id: "req-001".to_string(),
@@ -341,7 +341,7 @@ impl OpenResponse {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::open::OpenResponse;
+    /// use cosmic_ext_connect_core::plugins::open::OpenResponse;
     ///
     /// let response = OpenResponse::success(
     ///     "req-001".to_string(),
@@ -363,7 +363,7 @@ impl OpenResponse {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::open::OpenResponse;
+    /// use cosmic_ext_connect_core::plugins::open::OpenResponse;
     ///
     /// let response = OpenResponse::failure(
     ///     "req-001".to_string(),

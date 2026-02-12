@@ -2,7 +2,7 @@
 
 ## Welcome
 
-Thank you for your interest in contributing to `cosmic-connect-core`! This project is part of the COSMIC Connect initiative and welcomes contributions from the community.
+Thank you for your interest in contributing to `cosmic-ext-connect-core`! This project is part of the COSMIC Connect initiative and welcomes contributions from the community.
 
 ## Getting Started
 
@@ -18,8 +18,8 @@ Thank you for your interest in contributing to `cosmic-connect-core`! This proje
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/olafkfreund/cosmic-connect-core.git
-cd cosmic-connect-core
+git clone https://github.com/olafkfreund/cosmic-ext-connect-core.git
+cd cosmic-ext-connect-core
 ```
 
 2. **Build the project**
@@ -47,7 +47,7 @@ cargo install cargo-watch
 ### Project Structure
 
 ```
-cosmic-connect-core/
+cosmic-ext-connect-core/
 ├── src/
 │   ├── protocol/        # Core protocol types
 │   ├── network/         # Network and discovery
@@ -246,7 +246,7 @@ All public items must have documentation:
 /// # Examples
 ///
 /// ```
-/// use cosmic_connect_core::protocol::Packet;
+/// use cosmic_ext_connect_core::protocol::Packet;
 /// use serde_json::json;
 ///
 /// let packet = Packet::new("kdeconnect.ping", json!({}));
@@ -491,7 +491,7 @@ async fn test_feature_integration() {
 /// # Examples
 ///
 /// ```
-/// use cosmic_connect_core::MyType;
+/// use cosmic_ext_connect_core::MyType;
 ///
 /// let instance = MyType::new();
 /// assert_eq!(instance.value(), 42);
@@ -527,7 +527,7 @@ Use rustdoc format:
 /// # Examples
 ///
 /// ```
-/// use cosmic_connect_core::example;
+/// use cosmic_ext_connect_core::example;
 ///
 /// let result = example(42, "test");
 /// assert_eq!(result, expected);
@@ -589,4 +589,4 @@ Contributors are recognized in:
 - Release notes
 - Project acknowledgments
 
-Thank you for contributing to cosmic-connect-core!
+Thank you for contributing to cosmic-ext-connect-core!

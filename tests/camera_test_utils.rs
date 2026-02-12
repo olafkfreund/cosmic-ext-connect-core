@@ -3,8 +3,8 @@
 //! Provides utilities for testing the camera streaming pipeline on the desktop side.
 //! Includes mock H.264 frame generation, NAL unit validation, and network simulation.
 
-use cosmic_connect_core::plugins::camera::{CameraFrame, FrameType};
-use cosmic_connect_core::video::frame::{PixelFormat, VideoFrame};
+use cosmic_ext_connect_core::plugins::camera::{CameraFrame, FrameType};
+use cosmic_ext_connect_core::video::frame::{PixelFormat, VideoFrame};
 use std::time::Duration;
 
 /// Mock H.264 SPS (Sequence Parameter Set) NAL unit for testing

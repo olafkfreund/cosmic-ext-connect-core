@@ -13,8 +13,8 @@
 mod camera_test_utils;
 
 use camera_test_utils::*;
-use cosmic_connect_core::video::frame::{PixelFormat, VideoFrame};
-use cosmic_connect_core::video::v4l2_device::{V4l2Error, V4l2LoopbackDevice};
+use cosmic_ext_connect_core::video::frame::{PixelFormat, VideoFrame};
+use cosmic_ext_connect_core::video::v4l2_device::{V4l2Error, V4l2LoopbackDevice};
 use std::path::PathBuf;
 
 /// Check if v4l2loopback is available on the system
@@ -445,7 +445,7 @@ fn test_full_decode_to_v4l2_pipeline() {
         return;
     }
 
-    use cosmic_connect_core::video::h264_decoder::H264Decoder;
+    use cosmic_ext_connect_core::video::h264_decoder::H264Decoder;
 
     let device_path = get_test_device_path();
     let mut v4l2_device = V4l2LoopbackDevice::new(device_path);

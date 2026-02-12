@@ -2,7 +2,7 @@
 
 ## Overview
 
-Plugins extend the functionality of `cosmic-connect-core` by handling specific packet types and implementing custom features. This guide covers creating, registering, and testing plugins.
+Plugins extend the functionality of `cosmic-ext-connect-core` by handling specific packet types and implementing custom features. This guide covers creating, registering, and testing plugins.
 
 ## Plugin Architecture
 
@@ -605,7 +605,7 @@ impl PluginManager {
 
 ### UDL Definitions
 
-Add to `src/cosmic_connect_core.udl`:
+Add to `src/cosmic_ext_connect_core.udl`:
 
 ```
 interface PluginManager {

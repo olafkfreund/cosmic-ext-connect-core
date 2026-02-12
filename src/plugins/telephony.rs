@@ -231,7 +231,7 @@ impl TelephonyPlugin {
     /// # Examples
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::telephony::TelephonyPlugin;
+    /// use cosmic_ext_connect_core::plugins::telephony::TelephonyPlugin;
     ///
     /// let plugin = TelephonyPlugin::new();
     /// let packet = plugin.create_mute_request();

@@ -82,8 +82,8 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use cosmic_connect_core::plugins::runcommand::RunCommandPlugin;
-//! use cosmic_connect_core::Plugin;
+//! use cosmic_ext_connect_core::plugins::runcommand::RunCommandPlugin;
+//! use cosmic_ext_connect_core::Plugin;
 //!
 //! // Create plugin
 //! let mut plugin = RunCommandPlugin::new();
@@ -164,7 +164,7 @@ struct RunCommandConfig {
 /// ## Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::runcommand::RunCommandPlugin;
+/// use cosmic_ext_connect_core::plugins::runcommand::RunCommandPlugin;
 ///
 /// let plugin = RunCommandPlugin::new();
 /// assert_eq!(plugin.name(), "runcommand");
@@ -190,7 +190,7 @@ impl RunCommandPlugin {
     /// # Example
     ///
     /// ```rust
-    /// use cosmic_connect_core::plugins::runcommand::RunCommandPlugin;
+    /// use cosmic_ext_connect_core::plugins::runcommand::RunCommandPlugin;
     ///
     /// let plugin = RunCommandPlugin::new();
     /// assert_eq!(plugin.name(), "runcommand");
@@ -551,8 +551,8 @@ impl Plugin for RunCommandPlugin {
 /// # Example
 ///
 /// ```rust
-/// use cosmic_connect_core::plugins::runcommand::RunCommandPluginFactory;
-/// use cosmic_connect_core::plugins::PluginFactory;
+/// use cosmic_ext_connect_core::plugins::runcommand::RunCommandPluginFactory;
+/// use cosmic_ext_connect_core::plugins::PluginFactory;
 /// use std::sync::Arc;
 ///
 /// let factory: Arc<dyn PluginFactory> = Arc::new(RunCommandPluginFactory);
